@@ -9,6 +9,7 @@
     "typescript": "^5"
   },
   "scripts": {
+    "start": "bun ./app/main.ts",
     "deps": "bun ./scripts/deps.ts"
   },
   "private": true,
