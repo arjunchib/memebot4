@@ -8,6 +8,7 @@ import {
   VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { Readable } from "stream";
+import { client } from "../main";
 
 export class VoiceService {
   static getShared() {
@@ -18,10 +19,11 @@ export class VoiceService {
     behaviors: {
       noSubscriber: NoSubscriberBehavior.Play,
     },
+  }).on("error", (error) => {
+    console.error(error);
   });
 
   async play(file: string) {
-    const client = await this.getClient();
     const guild = await client.guilds.fetch(Bun.env.GUILD_ID!);
     const resource = this.getResource(file);
     const voiceConn = joinVoiceChannel({
@@ -32,16 +34,17 @@ export class VoiceService {
       adapterCreator: guild.voiceAdapterCreator,
     });
     voiceConn.once(VoiceConnectionStatus.Ready, async () => {
-      this.player.play(await resource);
-      voiceConn.subscribe(this.player);
-      this.player.once(AudioPlayerStatus.Idle, () => {
+      try {
+        this.player.play(await resource);
+        voiceConn.subscribe(this.player);
+        this.player.once(AudioPlayerStatus.Idle, () => {
+          voiceConn.destroy();
+        });
+      } catch (e) {
+        console.error(e);
         voiceConn.destroy();
-      });
+      }
     });
-  }
-
-  private async getClient() {
-    return (await import("../main")).client;
   }
 
   private async getResource(file: string) {
