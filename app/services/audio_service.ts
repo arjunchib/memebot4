@@ -1,10 +1,21 @@
+import { stat } from "fs";
 import { unlink } from "fs/promises";
+
+type AudioServiceState =
+  | "init"
+  | "download"
+  | "trim"
+  | "loudness1"
+  | "loudness2"
+  | "clean"
+  | "finish";
 
 interface AudioServiceOptions {
   id: string;
   sourceUrl: string;
   start?: string | undefined;
   end?: string | undefined;
+  onStateChange?: (state: AudioServiceState) => void;
 }
 
 interface LoudnormResults {
@@ -21,21 +32,33 @@ interface LoudnormResults {
 }
 
 export class AudioService {
-  static init(options: AudioServiceOptions) {
-    return new AudioService(options);
-  }
+  private state: AudioServiceState = "init";
 
   constructor(private options: AudioServiceOptions) {}
 
   async download() {
+    this.emit("download");
     const { parsedSourceUrl, rawFile } = await this.ytdlp();
+    this.emit("trim");
     const trimmedFile = await this.trimAndConvert(rawFile);
+    this.emit("loudness1");
     const loudness1 = await this.loudnorm1(trimmedFile);
+    this.emit("loudness2");
     const { normalizedFile, loudness2 } = await this.loudnorm2(
       trimmedFile,
       loudness1
     );
+    this.emit("finish");
     return { file: normalizedFile, loudness: loudness2, parsedSourceUrl };
+  }
+
+  public onStateChange(fn: (state: typeof this.state) => void) {
+    fn(this.state);
+  }
+
+  private emit(state: AudioServiceState) {
+    this.state = state;
+    this.options.onStateChange?.(this.state);
   }
 
   private async ytdlp() {

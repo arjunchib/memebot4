@@ -1,8 +1,26 @@
 import {
+  ButtonStyle,
   ChatInputCommandInteraction,
+  MessageFlags,
   ModalSubmitInteraction,
+  SelectMenuDefaultValueType,
 } from "discord.js";
-import { Label, Modal, TextInput } from "mango";
+import {
+  Button,
+  Container,
+  Label,
+  Message,
+  Modal,
+  TextInput,
+  ActionRow,
+  TextDisplay,
+  MediaGallery,
+  MediaGalleryItem,
+  UserSelect,
+  Separator,
+  Section,
+  Thumbnail,
+} from "mango";
 import { AudioService } from "../services/audio_service";
 import { VoiceService } from "../services/voice_service";
 
@@ -53,16 +71,59 @@ export default class AddController {
     const commands = interaction.fields.getTextInputValue("commands");
     const tags = interaction.fields.getTextInputValue("tags");
     const id = Bun.randomUUIDv7();
+    const author = interaction.user.username;
     const [start, end] =
       trim === "FULL" ? [undefined, undefined] : trim.split("..");
-    await interaction.reply("Downloading...");
-    const { file, loudness, parsedSourceUrl } = await AudioService.init({
-      id,
-      sourceUrl,
-      start,
-      end,
-    }).download();
-    await this.voiceService.play(file);
-    interaction.editReply(`Playing ${parsedSourceUrl}`);
+    await interaction.reply(<Message>Hi</Message>);
+    // const audioService = new AudioService({
+    //   id,
+    //   sourceUrl,
+    //   start,
+    //   end,
+    //   async onStateChange(state) {
+    //     await interaction.editReply(`State: ${state}`);
+    //   },
+    // });
+    // const { file, loudness, parsedSourceUrl } = await audioService.download();
+    // await this.voiceService.play(file);
+    const thumbnail = (
+      <Thumbnail
+        media={{
+          url: Bun.env.TEST_IMAGE!,
+        }}
+      />
+    );
+    await interaction.editReply(
+      <Message>
+        <Container accent_color={Bun.hash.crc32(id) % 0x1000000}>
+          <Section accessory={thumbnail}>
+            <TextDisplay>
+              {`# ${commands.split(" ")?.[0] || "nil"}
+- created: ${new Date().toDateString()}
+- author: ${author || "nil"}
+- duration: 13.1s - ${start || ""}..${end || ""}
+- commands: ${commands || "nil"}
+- tags: ${tags || "nil"}
+-# ${id}`}
+            </TextDisplay>
+          </Section>
+          <Separator />
+          <ActionRow>
+            <Button style={ButtonStyle.Primary} custom_id="add:preview">
+              Play
+            </Button>
+            <Button style={ButtonStyle.Secondary} custom_id="add:edit">
+              Edit
+            </Button>
+            <Button style={ButtonStyle.Link} url={sourceUrl}>
+              Source
+            </Button>
+            <Button style={ButtonStyle.Danger} custom_id="add:delete">
+              Delete
+            </Button>
+          </ActionRow>
+        </Container>
+      </Message>
+    );
   }
 }
