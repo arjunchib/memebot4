@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1714914084450,
+      "tag": "0000_fast_firestar",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1720968997397,
+      "tag": "0001_stale_dagger",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1761432605290,
+      "tag": "0002_condemned_mesmero",
+      "breakpoints": true
+    }
+  ]
+}

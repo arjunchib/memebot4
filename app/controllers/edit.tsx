@@ -1,36 +1,27 @@
-import {
-  ChatInputCommandInteraction,
-  MessageFlags,
-  ModalSubmitInteraction,
-} from "discord.js";
+import { MessageFlags, ModalSubmitInteraction } from "discord.js";
 import { AudioService } from "../services/audio_service";
 import { VoiceService } from "../services/voice_service";
-import { Commands, Memes, MemeTags, Tags } from "../../db/schema";
+import { Commands, Memes, MemeTags } from "../../db/schema";
 import { db } from "../../db/database";
 import { MemeModal } from "../views/meme_modal";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { MemeInfo } from "../views/meme_info";
-import { inArray } from "drizzle-orm";
 
-export default class AddController {
+export default class EditController {
   private voiceService = VoiceService.getShared();
-
-  async onChatInput(interaction: ChatInputCommandInteraction) {
-    await interaction.showModal(<MemeModal />);
-  }
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
     // Defer
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get fields
-    const id = Bun.randomUUIDv7();
-    const author = interaction.user;
-    const { sourceUrl, start, end, tags, commands, name } =
+    const { sourceUrl, start, end, tags, commands, name, id } =
       MemeModal.parseFields(interaction);
+    if (!id) throw new Error("Missing id");
 
     // Check commands
     const duplicateCommands = await db.query.commands.findMany({
-      where: inArray(Commands.name, commands),
+      where: and(inArray(Commands.name, commands), ne(Commands.memeId, id)),
       columns: {
         name: true,
       },
@@ -44,6 +35,12 @@ export default class AddController {
       );
     }
 
+    const { authorId } =
+      (await db.query.memes.findFirst({
+        where: eq(Memes.id, id),
+        columns: { authorId: true },
+      })) || {};
+
     // Pull audio
     const audioService = new AudioService({ id, sourceUrl, start, end });
     const { file, loudness, parsedSourceUrl, stats } =
@@ -51,33 +48,36 @@ export default class AddController {
     await this.voiceService.play(file);
 
     const info = await db.transaction(async (tx) => {
+      const data = {
+        id,
+        name,
+        start,
+        end,
+        sourceUrl: parsedSourceUrl,
+        authorId: authorId,
+        loudnessI: loudness.output_i,
+        loudnessLra: loudness.output_lra,
+        loudnessThresh: loudness.output_thresh,
+        loudnessTp: loudness.output_tp,
+        ...stats,
+      };
       const [meme] = await tx
         .insert(Memes)
-        .values({
-          id,
-          name,
-          start,
-          end,
-          sourceUrl: parsedSourceUrl,
-          authorId: author.id,
-          loudnessI: loudness.output_i,
-          loudnessLra: loudness.output_lra,
-          loudnessThresh: loudness.output_thresh,
-          loudnessTp: loudness.output_tp,
-          ...stats,
+        .values(data)
+        .onConflictDoUpdate({
+          target: Memes.id,
+          set: { ...data, updatedAt: sql`(unixepoch())` },
         })
         .returning();
-      await tx
-        .insert(Tags)
-        .values(tags.map((tag) => ({ name: tag })))
-        .onConflictDoNothing();
       const returnedTags = await tx
         .insert(MemeTags)
         .values(tags.map((tag) => ({ tagName: tag, memeId: id })))
+        .onConflictDoNothing()
         .returning({ tagName: MemeTags.tagName });
       const returnedCommands = await tx
         .insert(Commands)
         .values(commands.map((command) => ({ name: command, memeId: id })))
+        .onConflictDoNothing()
         .returning({ name: Commands.name });
       return {
         meme,
@@ -91,10 +91,8 @@ export default class AddController {
       acl: "public-read",
       type: "audio/webm",
     });
-    const memeinfo = (
+    await interaction.editReply(
       <MemeInfo meme={info.meme} tags={info.tags} commands={info.commands} />
     );
-    console.log(memeinfo);
-    await interaction.editReply(memeinfo);
   }
 }
