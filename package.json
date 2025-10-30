@@ -2,6 +2,7 @@
   "name": "memebot4",
   "module": "./app/main.ts",
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.919.0",
     "@types/bun": "^1.2.23",
     "drizzle-kit": "^0.31.5"
   },
@@ -10,7 +11,8 @@
   },
   "scripts": {
     "start": "bun ./app/main.ts",
-    "deps": "bun ./scripts/deps.ts"
+    "deps": "bun ./scripts/deps.ts",
+    "seed": "bun ./db/seed.ts"
   },
   "private": true,
   "type": "module",

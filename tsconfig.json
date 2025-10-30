@@ -25,7 +25,7 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "exactOptionalPropertyTypes": true
+    "noPropertyAccessFromIndexSignature": false
+    // "exactOptionalPropertyTypes": true
   }
 }

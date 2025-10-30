@@ -21,7 +21,7 @@ export default class PlayController {
     const meme = command?.meme;
     if (!meme) return await interaction.reply(`404 Meme not found`);
     await this.voiceService.play(
-      `${Bun.env.BUCKET_ENDPOINT}/${Bun.env.BUCKET!}/audio/${meme.id}.webm`
+      `${Bun.env.S3_ENDPOINT}/${Bun.env.S3_BUCKET!}/audio/${meme.id}.webm`
     );
     interaction.reply(`Playing ${name}`);
     await db
