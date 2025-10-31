@@ -91,10 +91,8 @@ export default class AddController {
       acl: "public-read",
       type: "audio/webm",
     });
-    const memeinfo = (
+    await interaction.editReply(
       <MemeInfo meme={info.meme} tags={info.tags} commands={info.commands} />
     );
-    console.log(memeinfo);
-    await interaction.editReply(memeinfo);
   }
 }

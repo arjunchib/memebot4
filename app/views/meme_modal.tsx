@@ -30,18 +30,24 @@ export class MemeModal {
     return { sourceUrl, commands, tags, start, end, name, id };
   }
 
-  private get trim() {
+  private trim() {
     if (!this.props.meme) return null;
     const { start, end } = this.props.meme;
     if (!start && !end) return null;
     return `${start || ""}..${end || ""}`;
   }
 
-  private get commands() {
+  private commands() {
     const { commands, meme } = this.props;
     if (!commands || !meme) return null;
     const { name } = meme;
     return [name, ...commands.filter((c) => c !== name)].join(" ");
+  }
+
+  private canUpdateSource() {
+    const createdAt = this.props.meme?.createdAt.getTime();
+    if (createdAt == null) return false;
+    return createdAt > Date.now() - 3600; // created within last hour
   }
 
   render() {
@@ -50,25 +56,29 @@ export class MemeModal {
     const customId = id ? `edit:${id}` : "add";
     return (
       <Modal title="Add meme" custom_id={customId}>
-        <Label label="Source URL">
-          <TextInput
-            style={1}
-            custom_id="source_url"
-            placeholder="https://www.youtube.com"
-            value={sourceUrl || ""}
-          />
-        </Label>
-        <Label
-          label="Trim"
-          description='Can use the whole audio clip by typing "FULL"'
-        >
-          <TextInput
-            style={1}
-            custom_id="trim"
-            placeholder="5..13"
-            value={this.trim || ""}
-          />
-        </Label>
+        {this.canUpdateSource() && (
+          <>
+            <Label label="Source URL">
+              <TextInput
+                style={1}
+                custom_id="source_url"
+                placeholder="https://www.youtube.com"
+                value={sourceUrl || ""}
+              />
+            </Label>
+            <Label
+              label="Trim"
+              description='Can use the whole audio clip by typing "FULL"'
+            >
+              <TextInput
+                style={1}
+                custom_id="trim"
+                placeholder="5..13"
+                value={this.trim() || ""}
+              />
+            </Label>
+          </>
+        )}
         <Label
           label="Commands"
           description="First command becomes the name of the meme"
@@ -77,7 +87,7 @@ export class MemeModal {
             style={1}
             custom_id="commands"
             placeholder="command1 command2 command3"
-            value={this.commands || ""}
+            value={this.commands() || ""}
           />
         </Label>
         <Label label="Tags">

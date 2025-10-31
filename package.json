@@ -12,7 +12,8 @@
   "scripts": {
     "start": "bun ./app/main.ts",
     "deps": "bun ./scripts/deps.ts",
-    "seed": "bun ./db/seed.ts"
+    "seed": "bun ./db/seed.ts",
+    "migrate": "bun ./db/migrate.ts"
   },
   "private": true,
   "type": "module",

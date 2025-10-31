@@ -28,7 +28,6 @@ export default class InfoController {
         if (!meme) throw new Error("No meme");
         const commands = meme.commands.map((c) => c.name);
         const tags = meme.memeTags.map((t) => t.tagName);
-        console.log(commands);
         await interaction.showModal(
           <MemeModal meme={meme} commands={commands} tags={tags} />
         );
