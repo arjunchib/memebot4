@@ -1,13 +1,22 @@
 import {
   AutocompleteInteraction,
   ButtonInteraction,
+  ButtonStyle,
   ChatInputCommandInteraction,
+  MessageFlags,
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
 import { Commands, Memes } from "../../db/schema";
 import { MemeInfo } from "../views/meme_info";
-import { Message, Modal } from "mango";
+import {
+  ActionRow,
+  Button,
+  Container,
+  Message,
+  Modal,
+  TextDisplay,
+} from "mango";
 import { DownloadFields } from "../views/download_fields";
 import { InfoFields } from "../views/info_fields";
 import { VoiceService } from "../services/voice_service";
@@ -25,8 +34,6 @@ export default class InfoController {
   );
 
   async onButton(interaction: ButtonInteraction) {
-    await interaction.deferUpdate();
-
     const [_, action, id] = interaction.customId.split(":");
 
     if (!id) {
@@ -47,13 +54,12 @@ export default class InfoController {
           return await this.delete(interaction, id);
       }
     } catch (e) {
-      interaction.editReply(
-        <MemeInfo info={await MemeInfo.getInfo(id)} error={e} />
-      );
+      interaction.followUp(<ErrorMessage error={e} ephemeral />);
     }
   }
 
   private async play(interaction: ButtonInteraction, id: string) {
+    await interaction.deferUpdate();
     const meme = await db.query.memes.findFirst({
       where: eq(Memes.id, id),
       columns: { id: true, name: true, playCount: true },
@@ -108,18 +114,39 @@ export default class InfoController {
   }
 
   private async delete(interaction: ButtonInteraction, id: string) {
-    const meme = await db.query.memes.findFirst({
-      where: eq(Memes.id, id),
-      columns: { authorId: true, name: true },
-    });
-    if (
-      env.ADMIN_ID !== interaction.user.id &&
-      meme?.authorId !== interaction.user.id
-    ) {
-      throw new Error("Not authorized to delete this meme");
+    await interaction.deferUpdate();
+    try {
+      const meme = await db.query.memes.findFirst({
+        where: eq(Memes.id, id),
+        columns: { authorId: true, name: true },
+      });
+      if (
+        env.ADMIN_ID !== interaction.user.id &&
+        meme?.authorId !== interaction.user.id
+      ) {
+        throw new Error("Not authorized to delete this meme");
+      }
+      // await db.delete(Memes).where(eq(Memes.id, id));
+      await interaction.followUp(
+        <Message flags={MessageFlags.Ephemeral}>
+          <Container accent_color={0xff0000}>
+            <TextDisplay>
+              Are you sure you want to delete this meme?
+            </TextDisplay>
+            <ActionRow>
+              <Button style={ButtonStyle.Secondary} custom_id="delete:cancel">
+                Cancel
+              </Button>
+              <Button style={ButtonStyle.Danger} custom_id="delete:confirm">
+                Delete
+              </Button>
+            </ActionRow>
+          </Container>
+        </Message>
+      );
+    } catch (e) {
+      interaction.followUp(<ErrorMessage ephemeral={true} error={e} />);
     }
-    await db.delete(Memes).where(eq(Memes.id, id));
-    interaction.editReply(`Deleted *${meme?.name}*`);
   }
 
   async onChatInput(interaction: ChatInputCommandInteraction) {

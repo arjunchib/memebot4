@@ -28,8 +28,7 @@ export default class AddController {
   }
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
-    // Defer
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply();
 
     try {
       // Get fields
@@ -79,15 +78,17 @@ export default class AddController {
           ...stats,
         });
         await tx
-          .insert(Tags)
-          .values(tags.map((tag) => ({ name: tag })))
-          .onConflictDoNothing();
-        await tx
-          .insert(MemeTags)
-          .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
-        await tx
           .insert(Commands)
           .values(commands.map((command) => ({ name: command, memeId: id })));
+        if (tags.length) {
+          await tx
+            .insert(Tags)
+            .values(tags.map((tag) => ({ name: tag })))
+            .onConflictDoNothing();
+          await tx
+            .insert(MemeTags)
+            .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
+        }
       });
 
       await Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
@@ -102,7 +103,7 @@ export default class AddController {
       interaction.editReply(
         <ErrorMessage error={e}>
           <ActionRow>
-            <Button style={ButtonStyle.Secondary} custom_id="retry">
+            <Button style={ButtonStyle.Secondary} custom_id="add:retry">
               Try Again
             </Button>
           </ActionRow>

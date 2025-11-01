@@ -1,3 +1,8 @@
+import {
+  BitField,
+  MessageFlags,
+  type MessageFlagsResolvable,
+} from "discord.js";
 import { Container, Message, TextDisplay } from "mango";
 
 const RED = 0xff0000;
@@ -7,11 +12,14 @@ export class ErrorMessage {
     private props: {
       error: unknown;
       children?: any;
+      ephemeral?: boolean;
     }
   ) {}
 
   render() {
-    const { error } = this.props;
+    const { error, ephemeral } = this.props;
+    const messageProps: { flags?: any } = {};
+    if (ephemeral) messageProps.flags = MessageFlags.Ephemeral;
     let name: string;
     let message: string;
     if (error instanceof Error) {
@@ -27,7 +35,7 @@ export class ErrorMessage {
     const output = `# ${name}
 ${message}`;
     return (
-      <Message allowedMentions={{ parse: [] }}>
+      <Message {...messageProps} allowedMentions={{ parse: [] }}>
         <Container accent_color={RED}>
           <TextDisplay>{output}</TextDisplay>
           {this.props.children}

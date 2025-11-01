@@ -57,14 +57,16 @@ export default class EditController {
     }
 
     await db.transaction(async (tx) => {
-      await tx
-        .insert(Tags)
-        .values(tags.map((tag) => ({ name: tag })))
-        .onConflictDoNothing();
       await tx.delete(MemeTags).where(eq(MemeTags.memeId, id));
-      await tx
-        .insert(MemeTags)
-        .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
+      if (tags.length) {
+        await tx
+          .insert(Tags)
+          .values(tags.map((tag) => ({ name: tag })))
+          .onConflictDoNothing();
+        await tx
+          .insert(MemeTags)
+          .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
+      }
       await tx.delete(Commands).where(eq(Commands.memeId, id));
       await tx
         .insert(Commands)
