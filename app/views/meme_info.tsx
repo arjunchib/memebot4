@@ -9,18 +9,30 @@ import {
   TextDisplay,
   Thumbnail,
 } from "mango";
-import type { Memes } from "../../db/schema";
+import { Memes } from "../../db/schema";
 import { withinLastHour } from "../helpers";
+import { db } from "../../db/database";
+import { eq } from "drizzle-orm";
 
 export class MemeInfo {
   constructor(
     private props: {
-      meme: typeof Memes.$inferSelect;
-      tags: string[];
-      commands: string[];
+      info: Awaited<ReturnType<(typeof MemeInfo)["getInfo"]>>;
       error?: string | Error | unknown;
     }
   ) {}
+
+  static async getInfo(id: string) {
+    const meme = await db.query.memes.findFirst({
+      where: eq(Memes.id, id),
+      with: {
+        memeTags: { columns: { tagName: true } },
+        commands: { columns: { name: true } },
+      },
+    });
+    if (!meme) throw new Error(`Cannot find meme with id: ${id}`);
+    return meme;
+  }
 
   private getErrorMessage() {
     const { error } = this.props;
@@ -32,15 +44,25 @@ export class MemeInfo {
   }
 
   render() {
-    const { commands, tags } = this.props;
-    const { name, id, authorId, duration, sourceUrl, start, end, createdAt } =
-      this.props.meme;
+    const {
+      name,
+      id,
+      authorId,
+      duration,
+      sourceUrl,
+      start,
+      end,
+      createdAt,
+      memeTags,
+      commands,
+    } = this.props.info;
+    const tags = memeTags.map((mt) => mt.tagName);
     const trim = ` (${start || ""}..${end || ""})`;
     const info = `# ${name}
 - created: ${new Date().toDateString()}
 - author: ${authorId ? `<@${authorId}>` : "Unknown"}
 - duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
-- commands: ${commands.join(", ")}
+- commands: ${commands.map((c) => c.name).join(", ")}
 - tags: ${tags.length ? tags.join(", ") : "*None*"}
 -# ${id}`;
     const thumbnail = (

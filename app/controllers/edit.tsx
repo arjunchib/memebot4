@@ -56,8 +56,6 @@ export default class EditController {
   }
 
   private async edit(interaction: ModalSubmitInteraction, id: string) {
-    // if (!interaction.isFromMessage()) throw new Error("Not from button click");
-
     const { commands, tags, name } = InfoFields.parse(interaction);
 
     const duplicateCommands = await db.query.commands.findMany({
@@ -73,7 +71,7 @@ export default class EditController {
       );
     }
 
-    const info = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       await tx
         .insert(Tags)
         .values(tags.map((tag) => ({ name: tag })))
@@ -81,43 +79,21 @@ export default class EditController {
       await tx.delete(MemeTags).where(eq(MemeTags.memeId, id));
       await tx
         .insert(MemeTags)
-        .values(tags.map((tag) => ({ tagName: tag, memeId: id })))
-        .onConflictDoNothing();
+        .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
       await tx.delete(Commands).where(eq(Commands.memeId, id));
       await tx
         .insert(Commands)
-        .values(commands.map((command) => ({ name: command, memeId: id })))
-        .onConflictDoNothing();
-      const [meme] = await tx
+        .values(commands.map((command) => ({ name: command, memeId: id })));
+      await tx
         .update(Memes)
         .set({ name, updatedAt: sql`(unixepoch())` })
-        .where(eq(Memes.id, id))
-        .returning();
-      const memeTags = await tx.query.memeTags.findMany({
-        where: eq(MemeTags.memeId, id),
-        columns: { tagName: true },
-      });
-      const myCommands = await tx.query.commands.findMany({
-        where: eq(Commands.memeId, id),
-        columns: { name: true },
-      });
-      console.log(memeTags);
-      return {
-        meme,
-        tags: memeTags.map((mt) => mt.tagName),
-        commands: myCommands.map((c) => c.name),
-      };
+        .where(eq(Memes.id, id));
     });
-    if (!info.meme) throw new Error("No meme");
 
-    await interaction.editReply(
-      <MemeInfo meme={info.meme} tags={info.tags} commands={info.commands} />
-    );
+    await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
   }
 
   private async redownload(interaction: ModalSubmitInteraction, id: string) {
-    // if (!interaction.isFromMessage()) throw new Error("Not from button click");
-
     const { sourceUrl, start, end } = DownloadFields.parse(interaction);
 
     const audioService = new AudioService({ id, sourceUrl, start, end });
@@ -125,44 +101,23 @@ export default class EditController {
       await audioService.download();
     await this.voiceService.play(file);
 
-    const info = await db.transaction(async (tx) => {
-      const [meme] = await tx
-        .update(Memes)
-        .set({
-          start,
-          end,
-          sourceUrl: parsedSourceUrl,
-          loudnessI: loudness.output_i,
-          loudnessLra: loudness.output_lra,
-          loudnessThresh: loudness.output_thresh,
-          loudnessTp: loudness.output_tp,
-          ...stats,
-          updatedAt: sql`(unixepoch())`,
-        })
-        .returning();
-      const returnedTags = await tx.query.memeTags.findMany({
-        where: eq(MemeTags.memeId, id),
-        columns: { tagName: true },
-      });
-      const returnedCommands = await tx.query.commands.findMany({
-        where: eq(Commands.memeId, id),
-        columns: { name: true },
-      });
-      return {
-        meme,
-        tags: returnedTags.map((t) => t.tagName),
-        commands: returnedCommands.map((c) => c.name),
-      };
+    await db.update(Memes).set({
+      start,
+      end,
+      sourceUrl: parsedSourceUrl,
+      loudnessI: loudness.output_i,
+      loudnessLra: loudness.output_lra,
+      loudnessThresh: loudness.output_thresh,
+      loudnessTp: loudness.output_tp,
+      ...stats,
+      updatedAt: sql`(unixepoch())`,
     });
-    if (!info.meme) throw new Error("Cannot find meme");
 
     await Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
       acl: "public-read",
       type: "audio/webm",
     });
 
-    await interaction.editReply(
-      <MemeInfo meme={info.meme} tags={info.tags} commands={info.commands} />
-    );
+    await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
   }
 }

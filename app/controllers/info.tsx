@@ -13,6 +13,7 @@ import { InfoFields } from "../views/info_fields";
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
 import { withinLastHour } from "../helpers";
+import { ErrorMessage } from "../views/error_message";
 
 export default class InfoController {
   private voiceService = VoiceService.getShared();
@@ -39,15 +40,18 @@ export default class InfoController {
 
   private async play(interaction: ButtonInteraction, id: string) {
     await interaction.deferUpdate();
-    if (!id) throw new Error("No id");
+
     const meme = await db.query.memes.findFirst({
       where: eq(Memes.id, id),
       columns: { id: true, name: true, playCount: true },
     });
+
     if (!meme) throw new Error("No meme");
+
     await this.voiceService.play(
       `${env.S3_ENDPOINT}/${env.S3_BUCKET}/audio/${meme.id}.webm`
     );
+
     await db
       .update(Memes)
       .set({
@@ -69,7 +73,7 @@ export default class InfoController {
     if (!meme) throw new Error("No meme");
     const commands = meme.commands.map((c) => c.name);
     const tags = meme.memeTags.map((t) => t.tagName);
-    const { sourceUrl, start, end, name } = meme;
+    const { name } = meme;
     return await interaction.showModal(
       <Modal title="Edit meme" custom_id={`edit:edit:${id}`}>
         <InfoFields {...{ tags, commands, name }} />
@@ -106,26 +110,19 @@ export default class InfoController {
   }
 
   async onChatInput(interaction: ChatInputCommandInteraction) {
-    const name = interaction.options.getString("meme");
-    if (!name) return await interaction.reply(`404 Meme not found`);
-    const command = await db.query.commands.findFirst({
-      where: eq(Commands.name, name),
-      with: {
-        meme: {
-          with: {
-            commands: { columns: { name: true } },
-            memeTags: { columns: { tagName: true } },
-          },
-        },
-      },
-    });
-    const meme = command?.meme;
-    if (!meme) return await interaction.reply(`404 Meme not found`);
-    const commands = meme.commands.map((c) => c.name);
-    const tags = meme.memeTags.map((t) => t.tagName);
-    await interaction.reply(
-      <MemeInfo meme={meme} commands={commands} tags={tags} />
-    );
+    try {
+      const name = interaction.options.getString("meme");
+      if (!name) throw new Error("No meme");
+      const command = await db.query.commands.findFirst({
+        where: eq(Commands.name, name),
+        columns: { memeId: true },
+      });
+      const id = command?.memeId;
+      if (!id) throw new Error("No meme");
+      await interaction.reply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
+    } catch (e) {
+      await interaction.reply(<ErrorMessage error={e} />);
+    }
   }
 
   async onAutocomplete(interaction: AutocompleteInteraction) {

@@ -64,49 +64,39 @@ export default class AddController {
         await audioService.download();
       await this.voiceService.play(file);
 
-      const info = await db.transaction(async (tx) => {
-        const [meme] = await tx
-          .insert(Memes)
-          .values({
-            id,
-            name,
-            start,
-            end,
-            sourceUrl: parsedSourceUrl,
-            authorId: author.id,
-            loudnessI: loudness.output_i,
-            loudnessLra: loudness.output_lra,
-            loudnessThresh: loudness.output_thresh,
-            loudnessTp: loudness.output_tp,
-            ...stats,
-          })
-          .returning();
+      await db.transaction(async (tx) => {
+        await tx.insert(Memes).values({
+          id,
+          name,
+          start,
+          end,
+          sourceUrl: parsedSourceUrl,
+          authorId: author.id,
+          loudnessI: loudness.output_i,
+          loudnessLra: loudness.output_lra,
+          loudnessThresh: loudness.output_thresh,
+          loudnessTp: loudness.output_tp,
+          ...stats,
+        });
         await tx
           .insert(Tags)
           .values(tags.map((tag) => ({ name: tag })))
           .onConflictDoNothing();
-        const returnedTags = await tx
+        await tx
           .insert(MemeTags)
-          .values(tags.map((tag) => ({ tagName: tag, memeId: id })))
-          .returning({ tagName: MemeTags.tagName });
-        const returnedCommands = await tx
+          .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
+        await tx
           .insert(Commands)
-          .values(commands.map((command) => ({ name: command, memeId: id })))
-          .returning({ name: Commands.name });
-        return {
-          meme,
-          tags: returnedTags.map((t) => t.tagName),
-          commands: returnedCommands.map((c) => c.name),
-        };
+          .values(commands.map((command) => ({ name: command, memeId: id })));
       });
-      if (!info.meme) throw new Error("Cannot find meme");
 
       await Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
         acl: "public-read",
         type: "audio/webm",
       });
+
       await interaction.editReply(
-        <MemeInfo meme={info.meme} tags={info.tags} commands={info.commands} />
+        <MemeInfo info={await MemeInfo.getInfo(id)} />
       );
     } catch (e) {
       interaction.editReply(
