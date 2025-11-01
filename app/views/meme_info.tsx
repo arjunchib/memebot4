@@ -1,4 +1,4 @@
-import { ButtonStyle, MessageFlags } from "discord.js";
+import { ButtonStyle } from "discord.js";
 import {
   ActionRow,
   Button,
@@ -10,6 +10,7 @@ import {
   Thumbnail,
 } from "mango";
 import type { Memes } from "../../db/schema";
+import { withinLastHour } from "../helpers";
 
 export class MemeInfo {
   constructor(
@@ -17,14 +18,31 @@ export class MemeInfo {
       meme: typeof Memes.$inferSelect;
       tags: string[];
       commands: string[];
+      error?: string | Error | unknown;
     }
   ) {}
 
+  private getErrorMessage() {
+    const { error } = this.props;
+    if (error instanceof Error) {
+      return error.message;
+    } else if (typeof error === "string") {
+      return error;
+    }
+  }
+
   render() {
     const { commands, tags } = this.props;
-    const { name, id, authorId, duration, sourceUrl, start, end } =
+    const { name, id, authorId, duration, sourceUrl, start, end, createdAt } =
       this.props.meme;
     const trim = ` (${start || ""}..${end || ""})`;
+    const info = `# ${name}
+- created: ${new Date().toDateString()}
+- author: ${authorId ? `<@${authorId}>` : "Unknown"}
+- duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
+- commands: ${commands.join(", ")}
+- tags: ${tags.length ? tags.join(", ") : "*None*"}
+-# ${id}`;
     const thumbnail = (
       <Thumbnail
         media={{
@@ -33,19 +51,12 @@ export class MemeInfo {
         }}
       />
     );
+    const error = this.getErrorMessage();
     return (
       <Message allowedMentions={{ parse: [] }}>
         <Container accent_color={Bun.hash.crc32(id) % 0x1000000}>
           <Section accessory={thumbnail}>
-            <TextDisplay>
-              {`# ${name}
-- created: ${new Date().toDateString()}
-- author: ${authorId ? `<@${authorId}>` : "Unknown"}
-- duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
-- comm ands: ${commands.join(", ")}
-- tags: ${tags.length ? tags.join(", ") : "*None*"}
--# ${id}`}
-            </TextDisplay>
+            <TextDisplay>{info}</TextDisplay>
           </Section>
           <Separator />
           <ActionRow>
@@ -55,6 +66,14 @@ export class MemeInfo {
             <Button style={ButtonStyle.Secondary} custom_id={`info:edit:${id}`}>
               Edit
             </Button>
+            {withinLastHour(createdAt) && (
+              <Button
+                style={ButtonStyle.Secondary}
+                custom_id={`info:redownload:${id}`}
+              >
+                Redownload
+              </Button>
+            )}
             {sourceUrl && (
               <Button style={ButtonStyle.Link} url={sourceUrl}>
                 Source
@@ -64,6 +83,7 @@ export class MemeInfo {
               Delete
             </Button>
           </ActionRow>
+          {error && <TextDisplay>{error}</TextDisplay>}
         </Container>
       </Message>
     );

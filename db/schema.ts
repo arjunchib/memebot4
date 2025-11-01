@@ -80,11 +80,11 @@ export const MemeTags = sqliteTable(
       .$onUpdate(() => sql`(unixepoch())`),
   },
   (table) => {
-    return {
-      pk: primaryKey({
+    return [
+      primaryKey({
         columns: [table.memeId, table.tagName],
       }),
-    };
+    ];
   }
 );
 
