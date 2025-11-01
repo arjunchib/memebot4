@@ -7,40 +7,53 @@ import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
 import { Commands, Memes } from "../../db/schema";
 import { MemeInfo } from "../views/meme_info";
-import { Modal } from "mango";
+import { Message, Modal } from "mango";
 import { DownloadFields } from "../views/download_fields";
 import { InfoFields } from "../views/info_fields";
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
-import { withinLastHour } from "../helpers";
+import { createValidator, withinLastHour } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 
 export default class InfoController {
   private voiceService = VoiceService.getShared();
+  private isValidAction = createValidator(
+    "play",
+    "edit",
+    "delete",
+    "redownload"
+  );
 
   async onButton(interaction: ButtonInteraction) {
-    const [_, action, id] = interaction.customId.split(":") as [
-      null,
-      "play" | "edit" | "delete" | "redownload",
-      string
-    ];
-    switch (action) {
-      case "play":
-        return await this.play(interaction, id);
-      case "edit":
-        return await this.edit(interaction, id);
-      case "redownload":
-        return await this.redownload(interaction, id);
-      case "delete":
-        return await this.delete(interaction, id);
-      default:
-        return await interaction.deferUpdate();
+    await interaction.deferUpdate();
+
+    const [_, action, id] = interaction.customId.split(":");
+
+    if (!id) {
+      return interaction.editReply(<Message>Cannot determine id</Message>);
+    }
+
+    try {
+      if (!this.isValidAction(action)) throw new Error("Invalid action");
+
+      switch (action) {
+        case "play":
+          return await this.play(interaction, id);
+        case "edit":
+          return await this.edit(interaction, id);
+        case "redownload":
+          return await this.redownload(interaction, id);
+        case "delete":
+          return await this.delete(interaction, id);
+      }
+    } catch (e) {
+      interaction.editReply(
+        <MemeInfo info={await MemeInfo.getInfo(id)} error={e} />
+      );
     }
   }
 
   private async play(interaction: ButtonInteraction, id: string) {
-    await interaction.deferUpdate();
-
     const meme = await db.query.memes.findFirst({
       where: eq(Memes.id, id),
       columns: { id: true, name: true, playCount: true },

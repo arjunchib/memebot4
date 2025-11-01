@@ -8,15 +8,13 @@ import { MemeInfo } from "../views/meme_info";
 import { InfoFields } from "../views/info_fields";
 import { DownloadFields } from "../views/download_fields";
 import { Message } from "mango";
+import { createValidator } from "../helpers";
 
 type ActionType = "edit" | "redownload";
+
 export default class EditController {
   private voiceService = VoiceService.getShared();
-
-  private isAction(action: string | undefined): action is ActionType {
-    if (action == null) throw new Error("Action is undefined");
-    return ["edit", "redownload"].includes(action);
-  }
+  private isValidAction = createValidator("edit", "redownload");
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
     await interaction.deferUpdate();
@@ -28,30 +26,17 @@ export default class EditController {
     }
 
     try {
-      if (!this.isAction(action)) throw new Error("Action is invalid");
+      if (!this.isValidAction(action)) throw new Error("Action is invalid");
       switch (action) {
         case "edit":
           return this.edit(interaction, id);
         case "redownload":
           return this.redownload(interaction, id);
       }
-    } catch (error: any) {
-      console.error(error);
-      const meme = await db.query.memes.findFirst({
-        where: eq(Memes.id, id),
-        with: {
-          memeTags: { columns: { tagName: true } },
-          commands: { columns: { name: true } },
-        },
-      });
-      if (!meme) {
-        return interaction.editReply(
-          <Message>{error?.message || error || "Error"}</Message>
-        );
-      }
-      const tags = meme?.memeTags.map((mt) => mt.tagName);
-      const commands = meme?.commands.map((c) => c.name);
-      interaction.editReply(<MemeInfo {...{ meme, tags, commands, error }} />);
+    } catch (e: any) {
+      interaction.editReply(
+        <MemeInfo info={await MemeInfo.getInfo(id)} error={e} />
+      );
     }
   }
 
