@@ -31,8 +31,15 @@ export class AudioService {
     let loudness = await this.loudnorm();
     loudness = await this.loudnorm(loudness);
     const stats = await this.ffprobe();
+    await this.waveform();
     await unlink(this.trimmedFile);
-    return { file: this.file, loudness, parsedSourceUrl, stats };
+    return {
+      file: this.file,
+      waveformFile: this.waveformFile,
+      loudness,
+      parsedSourceUrl,
+      stats,
+    };
   }
 
   private get file() {
@@ -41,6 +48,10 @@ export class AudioService {
 
   private get trimmedFile() {
     return `./audio/trimmed-${this.options.id}.webm`;
+  }
+
+  private get waveformFile() {
+    return `./audio/waveform-${this.options.id}.png`;
   }
 
   private async ytdlp() {
@@ -155,5 +166,21 @@ export class AudioService {
       size: parseInt(stats["size"]),
       bitRate: parseInt(stats["bit_rate"]),
     };
+  }
+
+  private async waveform() {
+    return await this.ffmpeg(
+      "-i",
+      this.file,
+      "-filter_complex",
+      "compand,showwavespic=s=512x128:colors=white",
+      "-frames:v",
+      "1",
+      "-c:v",
+      "png",
+      "-f",
+      "image2",
+      this.waveformFile
+    );
   }
 }

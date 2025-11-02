@@ -21,7 +21,7 @@ import { DownloadFields } from "../views/download_fields";
 import { InfoFields } from "../views/info_fields";
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
-import { createValidator, withinLastHour } from "../helpers";
+import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 
 export default class InfoController {
