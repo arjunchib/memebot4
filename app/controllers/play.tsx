@@ -7,6 +7,7 @@ import { eq, like, sql } from "drizzle-orm";
 import { Commands, Memes } from "../../db/schema";
 
 import { VoiceService } from "../services/voice_service";
+import { env } from "../services/env_service";
 
 export default class PlayController {
   private voiceService = VoiceService.getShared();
@@ -21,7 +22,7 @@ export default class PlayController {
     const meme = command?.meme;
     if (!meme) return await interaction.reply(`404 Meme not found`);
     await this.voiceService.play(
-      `${Bun.env.S3_ENDPOINT}/${Bun.env.S3_BUCKET!}/audio/${meme.id}.webm`
+      `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
     );
     interaction.reply(`Playing ${name}`);
     await db

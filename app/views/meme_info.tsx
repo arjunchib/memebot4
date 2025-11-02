@@ -13,6 +13,7 @@ import { Memes } from "../../db/schema";
 import { withinLastHour } from "../helpers";
 import { db } from "../../db/database";
 import { eq } from "drizzle-orm";
+import { env } from "../services/env_service";
 
 export class MemeInfo {
   constructor(
@@ -68,8 +69,7 @@ export class MemeInfo {
     const thumbnail = (
       <Thumbnail
         media={{
-          url: `${Bun.env.S3_ENDPOINT}/${Bun.env
-            .S3_BUCKET!}/waveform/${id}.png`,
+          url: `${env.s3Endpoint}/${env.s3Bucket}/waveform/${id}.png`,
         }}
       />
     );

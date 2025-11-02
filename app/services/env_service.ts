@@ -6,16 +6,16 @@ function ensure(name: string) {
 }
 
 export class EnvService {
-  APPLICATION_ID = ensure("APPLICATION_ID");
-  TOKEN = ensure("TOKEN");
-  SEED_BUCKET = ensure("SEED_BUCKET");
-  S3_ACCESS_KEY_ID = ensure("S3_ACCESS_KEY_ID");
-  S3_SECRET_ACCESS_KEY = ensure("S3_SECRET_ACCESS_KEY");
-  S3_ENDPOINT = ensure("S3_ENDPOINT");
-  S3_BUCKET = ensure("S3_BUCKET");
-  GUILD_ID = ensure("GUILD_ID");
-  CHANNEL_ID = ensure("CHANNEL_ID");
-  ADMIN_ID = ensure("ADMIN_ID");
+  applicationId = ensure("APPLICATION_ID");
+  token = ensure("TOKEN");
+  seedBucket = ensure("SEED_BUCKET");
+  s3AccessKeyId = ensure("S3_ACCESS_KEY_ID");
+  s3SecretAccessKey = ensure("S3_SECRET_ACCESS_KEY");
+  s3Endpoint = ensure("S3_ENDPOINT");
+  s3Bucket = ensure("S3_BUCKET");
+  guildId = ensure("GUILD_ID");
+  channelId = ensure("CHANNEL_ID");
+  adminId = ensure("ADMIN_ID");
 }
 
 export const env = new EnvService();

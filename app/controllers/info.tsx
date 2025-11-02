@@ -69,7 +69,7 @@ export default class InfoController {
     if (!meme) throw new Error("No meme");
 
     await this.voiceService.play(
-      `${env.S3_ENDPOINT}/${env.S3_BUCKET}/audio/${meme.id}.webm`
+      `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
     );
 
     await db
@@ -122,7 +122,7 @@ export default class InfoController {
         columns: { authorId: true, name: true },
       });
       if (
-        env.ADMIN_ID !== interaction.user.id &&
+        env.adminId !== interaction.user.id &&
         meme?.authorId !== interaction.user.id
       ) {
         throw new Error("Not authorized to delete this meme");

@@ -9,6 +9,7 @@ import {
 } from "@discordjs/voice";
 import { Readable } from "stream";
 import { client } from "../main";
+import { env } from "./env_service";
 
 export class VoiceService {
   static getShared() {
@@ -24,11 +25,11 @@ export class VoiceService {
   });
 
   async play(file: string) {
-    const guild = await client.guilds.fetch(Bun.env.GUILD_ID!);
+    const guild = await client.guilds.fetch(env.guildId);
     const resource = this.getResource(file);
     const voiceConn = joinVoiceChannel({
-      channelId: Bun.env.CHANNEL_ID!,
-      guildId: Bun.env.GUILD_ID!,
+      channelId: env.channelId,
+      guildId: env.guildId,
       selfDeaf: true,
       selfMute: false,
       adapterCreator: guild.voiceAdapterCreator,
