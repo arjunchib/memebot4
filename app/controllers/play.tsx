@@ -10,8 +10,6 @@ import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
 
 export default class PlayController {
-  private voiceService = VoiceService.getShared();
-
   async onChatInput(interaction: ChatInputCommandInteraction) {
     const name = interaction.options.getString("meme");
     if (!name) return await interaction.reply(`404 Meme not found`);
@@ -21,7 +19,7 @@ export default class PlayController {
     });
     const meme = command?.meme;
     if (!meme) return await interaction.reply(`404 Meme not found`);
-    await this.voiceService.play(
+    await VoiceService.shared.play(
       `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
     );
     interaction.reply(`Playing ${name}`);

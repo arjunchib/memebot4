@@ -16,8 +16,6 @@ import { ErrorMessage } from "../views/error_message";
 import { unlink } from "fs/promises";
 
 export default class AddController {
-  private voiceService = VoiceService.getShared();
-
   async onChatInput(interaction: ChatInputCommandInteraction) {
     await interaction.showModal(
       <Modal title="Add meme" custom_id="add">
@@ -61,7 +59,7 @@ export default class AddController {
       const audioService = new AudioService({ id, sourceUrl, start, end });
       const { file, waveformFile, loudness, parsedSourceUrl, stats } =
         await audioService.download();
-      await this.voiceService.play(file);
+      await VoiceService.shared.play(file);
 
       await db.transaction(async (tx) => {
         await tx.insert(Meme).values({

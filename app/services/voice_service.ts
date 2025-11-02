@@ -12,8 +12,10 @@ import { client } from "../main";
 import { env } from "./env_service";
 
 export class VoiceService {
-  static getShared() {
-    return new VoiceService();
+  static #shared: VoiceService;
+
+  static get shared() {
+    return (this.#shared ||= new VoiceService());
   }
 
   private player = createAudioPlayer({

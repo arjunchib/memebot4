@@ -26,7 +26,6 @@ import { ErrorMessage } from "../views/error_message";
 import { DeleteConfirmation } from "../views/delete_confirmation";
 
 export default class InfoController {
-  private voiceService = VoiceService.getShared();
   private isValidAction = createValidator(
     "play",
     "edit",
@@ -68,7 +67,7 @@ export default class InfoController {
 
     if (!meme) throw new Error("No meme");
 
-    await this.voiceService.play(
+    await VoiceService.shared.play(
       `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
     );
 

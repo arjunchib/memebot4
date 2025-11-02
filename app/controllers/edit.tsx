@@ -13,7 +13,6 @@ import { createValidator } from "../helpers";
 type ActionType = "edit" | "redownload";
 
 export default class EditController {
-  private voiceService = VoiceService.getShared();
   private isValidAction = createValidator("edit", "redownload");
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
@@ -86,7 +85,7 @@ export default class EditController {
     const audioService = new AudioService({ id, sourceUrl, start, end });
     const { file, waveformFile, loudness, parsedSourceUrl, stats } =
       await audioService.download();
-    await this.voiceService.play(file);
+    await VoiceService.shared.play(file);
 
     await db
       .update(Meme)
