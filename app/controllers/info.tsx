@@ -54,6 +54,9 @@ export default class InfoController {
           return await this.delete(interaction, id);
       }
     } catch (e) {
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate();
+      }
       interaction.followUp(<ErrorMessage error={e} ephemeral />);
     }
   }

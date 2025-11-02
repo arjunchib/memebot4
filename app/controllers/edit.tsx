@@ -9,6 +9,7 @@ import { InfoFields } from "../views/info_fields";
 import { DownloadFields } from "../views/download_fields";
 import { Message } from "mango";
 import { createValidator } from "../helpers";
+import { ErrorMessage } from "../views/error_message";
 
 type ActionType = "edit" | "redownload";
 
@@ -18,24 +19,20 @@ export default class EditController {
   async onModalSubmit(interaction: ModalSubmitInteraction) {
     await interaction.deferUpdate();
 
-    const [_, action, id] = interaction.customId.split(":");
-
-    if (id == null) {
-      return interaction.editReply(<Message>Cannot determine id</Message>);
-    }
-
     try {
+      const [_, action, id] = interaction.customId.split(":");
+
+      if (id == null) throw new Error("Cannot find meme");
       if (!this.isValidAction(action)) throw new Error("Action is invalid");
+
       switch (action) {
         case "edit":
           return this.edit(interaction, id);
         case "redownload":
           return this.redownload(interaction, id);
       }
-    } catch (e: any) {
-      interaction.editReply(
-        <MemeInfo info={await MemeInfo.getInfo(id)} error={e} />
-      );
+    } catch (e) {
+      await interaction.followUp(<ErrorMessage error={e} ephemeral />);
     }
   }
 
