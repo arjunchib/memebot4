@@ -11,7 +11,7 @@ export class CleanupAudioFilesTask {
   private oneDayAgo = this.now - MS_IN_DAY;
 
   async perform() {
-    console.log("Running cleanup audio files task");
+    console.log("Start cleanup audio files");
     const files = await readdir("./audio");
     const results = await Promise.allSettled(
       files.map((file) => this.worker(`./audio/${file}`))
