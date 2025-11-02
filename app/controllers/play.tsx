@@ -4,7 +4,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
-import { Commands, Memes } from "../../db/schema";
+import { Command, Meme } from "../../db/schema";
 
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
@@ -16,7 +16,7 @@ export default class PlayController {
     const name = interaction.options.getString("meme");
     if (!name) return await interaction.reply(`404 Meme not found`);
     const command = await db.query.commands.findFirst({
-      where: eq(Commands.name, name),
+      where: eq(Command.name, name),
       with: { meme: { columns: { id: true, name: true, playCount: true } } },
     });
     const meme = command?.meme;
@@ -26,13 +26,13 @@ export default class PlayController {
     );
     interaction.reply(`Playing ${name}`);
     await db
-      .update(Memes)
+      .update(Meme)
       .set({
         playCount: meme.playCount + 1,
         // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
         updatedAt: sql`(unixepoch())`,
       })
-      .where(eq(Memes.id, meme.id));
+      .where(eq(Meme.id, meme.id));
   }
 
   async onAutocomplete(interaction: AutocompleteInteraction) {
@@ -40,11 +40,11 @@ export default class PlayController {
     // group by meme so we can collapse commands into one entry
     const commandResults = await db
       .select({
-        names: sql<string>`GROUP_CONCAT(${Commands.name},';')`,
+        names: sql<string>`GROUP_CONCAT(${Command.name},';')`,
       })
-      .from(Commands)
-      .where(like(Commands.name, `%${name}%`))
-      .groupBy(Commands.memeId)
+      .from(Command)
+      .where(like(Command.name, `%${name}%`))
+      .groupBy(Command.memeId)
       .limit(25);
     const choices = commandResults
       .map((c) => {

@@ -7,7 +7,7 @@ import {
   primaryKey,
 } from "drizzle-orm/sqlite-core";
 
-export const Memes = sqliteTable("memes", {
+export const Meme = sqliteTable("memes", {
   id: text("id")
     .primaryKey()
     .notNull()
@@ -34,11 +34,11 @@ export const Memes = sqliteTable("memes", {
   end: text("end"),
 });
 
-export const Commands = sqliteTable("commands", {
+export const Command = sqliteTable("commands", {
   name: text("name").primaryKey().notNull(),
   memeId: text("meme_id")
     .notNull()
-    .references(() => Memes.id, {
+    .references(() => Meme.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
@@ -50,7 +50,7 @@ export const Commands = sqliteTable("commands", {
     .$onUpdate(() => sql`(unixepoch())`),
 });
 
-export const Tags = sqliteTable("tags", {
+export const Tag = sqliteTable("tags", {
   name: text("name").primaryKey().notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
@@ -60,15 +60,15 @@ export const Tags = sqliteTable("tags", {
     .$onUpdate(() => sql`(unixepoch())`),
 });
 
-export const MemeTags = sqliteTable(
+export const MemeTag = sqliteTable(
   "meme_tags",
   {
     memeId: text("meme_id")
       .notNull()
-      .references(() => Memes.id, { onDelete: "cascade", onUpdate: "cascade" }),
+      .references(() => Meme.id, { onDelete: "cascade", onUpdate: "cascade" }),
     tagName: text("tag_name")
       .notNull()
-      .references(() => Tags.name, {
+      .references(() => Tag.name, {
         onDelete: "cascade",
         onUpdate: "cascade",
       }),

@@ -3,7 +3,7 @@ import { createValidator } from "../helpers";
 import { Container, Message, TextDisplay } from "mango";
 import { ErrorMessage } from "../views/error_message";
 import { db } from "../../db/database";
-import { Memes } from "../../db/schema";
+import { Meme } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
 export default class DeleteController {
@@ -31,7 +31,7 @@ export default class DeleteController {
     id: string | undefined
   ) {
     if (!id) throw new Error("Cannot find meme");
-    const [meme] = await db.delete(Memes).where(eq(Memes.id, id)).returning();
+    const [meme] = await db.delete(Meme).where(eq(Meme.id, id)).returning();
     if (!meme) throw new Error("Cannot find meme");
     await interaction.deleteReply();
     await interaction.followUp(

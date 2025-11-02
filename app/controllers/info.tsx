@@ -7,7 +7,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
-import { Commands, Memes } from "../../db/schema";
+import { Command, Meme } from "../../db/schema";
 import { MemeInfo } from "../views/meme_info";
 import {
   ActionRow,
@@ -62,7 +62,7 @@ export default class InfoController {
   private async play(interaction: ButtonInteraction, id: string) {
     await interaction.deferUpdate();
     const meme = await db.query.memes.findFirst({
-      where: eq(Memes.id, id),
+      where: eq(Meme.id, id),
       columns: { id: true, name: true, playCount: true },
     });
 
@@ -73,18 +73,18 @@ export default class InfoController {
     );
 
     await db
-      .update(Memes)
+      .update(Meme)
       .set({
         playCount: meme.playCount + 1,
         // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
         updatedAt: sql`(unixepoch())`,
       })
-      .where(eq(Memes.id, meme.id));
+      .where(eq(Meme.id, meme.id));
   }
 
   private async edit(interaction: ButtonInteraction, id: string) {
     const meme = await db.query.memes.findFirst({
-      where: eq(Memes.id, id),
+      where: eq(Meme.id, id),
       with: {
         commands: { columns: { name: true } },
         memeTags: { columns: { tagName: true } },
@@ -102,7 +102,7 @@ export default class InfoController {
   }
   private async redownload(interaction: ButtonInteraction, id: string) {
     const meme = await db.query.memes.findFirst({
-      where: eq(Memes.id, id),
+      where: eq(Meme.id, id),
       columns: { sourceUrl: true, start: true, end: true },
     });
     if (!meme) throw new Error("No meme");
@@ -118,7 +118,7 @@ export default class InfoController {
     await interaction.deferUpdate();
     try {
       const meme = await db.query.memes.findFirst({
-        where: eq(Memes.id, id),
+        where: eq(Meme.id, id),
         columns: { authorId: true, name: true },
       });
       if (
@@ -138,7 +138,7 @@ export default class InfoController {
       const name = interaction.options.getString("meme");
       if (!name) throw new Error("No meme");
       const command = await db.query.commands.findFirst({
-        where: eq(Commands.name, name),
+        where: eq(Command.name, name),
         columns: { memeId: true },
       });
       const id = command?.memeId;
@@ -154,11 +154,11 @@ export default class InfoController {
     // group by meme so we can collapse commands into one entry
     const commandResults = await db
       .select({
-        names: sql<string>`GROUP_CONCAT(${Commands.name},';')`,
+        names: sql<string>`GROUP_CONCAT(${Command.name},';')`,
       })
-      .from(Commands)
-      .where(like(Commands.name, `%${name}%`))
-      .groupBy(Commands.memeId)
+      .from(Command)
+      .where(like(Command.name, `%${name}%`))
+      .groupBy(Command.memeId)
       .limit(25);
     const choices = commandResults
       .map((c) => {

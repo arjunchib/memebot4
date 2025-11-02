@@ -1,29 +1,29 @@
 import { relations } from "drizzle-orm";
-import { Commands, Memes, MemeTags, Tags } from "./schema";
+import { Command, Meme, MemeTag, Tag } from "./schema";
 
-export const MemesRelations = relations(Memes, ({ many }) => ({
-  commands: many(Commands),
-  memeTags: many(MemeTags),
+export const MemeRelations = relations(Meme, ({ many }) => ({
+  commands: many(Command),
+  memeTags: many(MemeTag),
 }));
 
-export const CommandsRelations = relations(Commands, ({ one }) => ({
-  meme: one(Memes, {
-    fields: [Commands.memeId],
-    references: [Memes.id],
+export const CommandRelations = relations(Command, ({ one }) => ({
+  meme: one(Meme, {
+    fields: [Command.memeId],
+    references: [Meme.id],
   }),
 }));
 
-export const TagsRelations = relations(Tags, ({ many }) => ({
-  memeTags: many(MemeTags),
+export const TagRelations = relations(Tag, ({ many }) => ({
+  memeTags: many(MemeTag),
 }));
 
-export const MemeTagsRelations = relations(MemeTags, ({ one }) => ({
-  meme: one(Memes, {
-    fields: [MemeTags.memeId],
-    references: [Memes.id],
+export const MemeTagRelations = relations(MemeTag, ({ one }) => ({
+  meme: one(Meme, {
+    fields: [MemeTag.memeId],
+    references: [Meme.id],
   }),
-  tag: one(Tags, {
-    fields: [MemeTags.tagName],
-    references: [Tags.name],
+  tag: one(Tag, {
+    fields: [MemeTag.tagName],
+    references: [Tag.name],
   }),
 }));

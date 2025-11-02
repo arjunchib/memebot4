@@ -1,11 +1,11 @@
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
-import { MemeTags, KeyValue, Commands, Memes, Tags } from "./schema";
+import { MemeTag, KeyValue, Command, Meme, Tag } from "./schema";
 import {
-  CommandsRelations,
-  MemeTagsRelations,
-  MemesRelations,
-  TagsRelations,
+  CommandRelations,
+  MemeTagRelations,
+  MemeRelations,
+  TagRelations,
 } from "./relations";
 
 const sqlite = new Database("memebot.sqlite", { create: true });
@@ -13,15 +13,15 @@ sqlite.exec("PRAGMA journal_mode=WAL;");
 sqlite.exec("PRAGMA foreign_keys=ON;");
 export const db = drizzle(sqlite, {
   schema: {
-    memes: Memes,
-    commands: Commands,
-    tags: Tags,
-    memeTags: MemeTags,
+    memes: Meme,
+    commands: Command,
+    tags: Tag,
+    memeTags: MemeTag,
     keyValue: KeyValue,
-    MemesRelations,
-    CommandsRelations,
-    TagsRelations,
-    MemeTagsRelations,
+    MemeRelations,
+    CommandRelations,
+    TagRelations,
+    MemeTagRelations,
   },
 });
 

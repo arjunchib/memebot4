@@ -1,7 +1,7 @@
 import { MessageFlags, ModalSubmitInteraction } from "discord.js";
 import { AudioService } from "../services/audio_service";
 import { VoiceService } from "../services/voice_service";
-import { Commands, Memes, MemeTags, Tags } from "../../db/schema";
+import { Command, Meme, MemeTag, Tag } from "../../db/schema";
 import { db } from "../../db/database";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { MemeInfo } from "../views/meme_info";
@@ -44,7 +44,7 @@ export default class EditController {
     const { commands, tags, name } = InfoFields.parse(interaction);
 
     const duplicateCommands = await db.query.commands.findMany({
-      where: and(inArray(Commands.name, commands), ne(Commands.memeId, id)),
+      where: and(inArray(Command.name, commands), ne(Command.memeId, id)),
       columns: { name: true },
     });
 
@@ -57,24 +57,24 @@ export default class EditController {
     }
 
     await db.transaction(async (tx) => {
-      await tx.delete(MemeTags).where(eq(MemeTags.memeId, id));
+      await tx.delete(MemeTag).where(eq(MemeTag.memeId, id));
       if (tags.length) {
         await tx
-          .insert(Tags)
+          .insert(Tag)
           .values(tags.map((tag) => ({ name: tag })))
           .onConflictDoNothing();
         await tx
-          .insert(MemeTags)
+          .insert(MemeTag)
           .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
       }
-      await tx.delete(Commands).where(eq(Commands.memeId, id));
+      await tx.delete(Command).where(eq(Command.memeId, id));
       await tx
-        .insert(Commands)
+        .insert(Command)
         .values(commands.map((command) => ({ name: command, memeId: id })));
       await tx
-        .update(Memes)
+        .update(Meme)
         .set({ name, updatedAt: sql`(unixepoch())` })
-        .where(eq(Memes.id, id));
+        .where(eq(Meme.id, id));
     });
 
     await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
@@ -88,7 +88,7 @@ export default class EditController {
       await audioService.download();
     await this.voiceService.play(file);
 
-    await db.update(Memes).set({
+    await db.update(Meme).set({
       start,
       end,
       sourceUrl: parsedSourceUrl,

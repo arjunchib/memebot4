@@ -9,7 +9,7 @@ import {
   TextDisplay,
   Thumbnail,
 } from "mango";
-import { Memes } from "../../db/schema";
+import { Meme } from "../../db/schema";
 import { withinLastHour } from "../helpers";
 import { db } from "../../db/database";
 import { eq } from "drizzle-orm";
@@ -25,7 +25,7 @@ export class MemeInfo {
 
   static async getInfo(id: string) {
     const meme = await db.query.memes.findFirst({
-      where: eq(Memes.id, id),
+      where: eq(Meme.id, id),
       with: {
         memeTags: { columns: { tagName: true } },
         commands: { columns: { name: true } },

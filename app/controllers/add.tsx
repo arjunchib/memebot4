@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { AudioService } from "../services/audio_service";
 import { VoiceService } from "../services/voice_service";
-import { Commands, Memes, MemeTags, Tags } from "../../db/schema";
+import { Command, Meme, MemeTag, Tag } from "../../db/schema";
 import { db } from "../../db/database";
 import { MemeInfo } from "../views/meme_info";
 import { inArray } from "drizzle-orm";
@@ -43,7 +43,7 @@ export default class AddController {
 
       // Check commands
       const duplicateCommands = await db.query.commands.findMany({
-        where: inArray(Commands.name, commands),
+        where: inArray(Command.name, commands),
         columns: {
           name: true,
         },
@@ -64,7 +64,7 @@ export default class AddController {
       await this.voiceService.play(file);
 
       await db.transaction(async (tx) => {
-        await tx.insert(Memes).values({
+        await tx.insert(Meme).values({
           id,
           name,
           start,
@@ -78,15 +78,15 @@ export default class AddController {
           ...stats,
         });
         await tx
-          .insert(Commands)
+          .insert(Command)
           .values(commands.map((command) => ({ name: command, memeId: id })));
         if (tags.length) {
           await tx
-            .insert(Tags)
+            .insert(Tag)
             .values(tags.map((tag) => ({ name: tag })))
             .onConflictDoNothing();
           await tx
-            .insert(MemeTags)
+            .insert(MemeTag)
             .values(tags.map((tag) => ({ tagName: tag, memeId: id })));
         }
       });
