@@ -123,13 +123,10 @@ export default class InfoController {
         where: eq(Meme.id, id),
         columns: { authorId: true, name: true },
       });
-      if (
-        env.adminId !== interaction.user.id &&
-        meme?.authorId !== interaction.user.id
-      ) {
-        throw new Error("Not authorized to delete this meme");
-      }
-      await interaction.followUp(<DeleteConfirmation id={id} />);
+      const allowed =
+        env.adminId === interaction.user.id ||
+        meme?.authorId === interaction.user.id;
+      await interaction.followUp(<DeleteConfirmation {...{ id, allowed }} />);
     } catch (e) {
       interaction.followUp(<ErrorMessage ephemeral={true} error={e} />);
     }
