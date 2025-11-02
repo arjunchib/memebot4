@@ -23,6 +23,7 @@ import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
 import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
+import { DeleteConfirmation } from "../views/delete_confirmation";
 
 export default class InfoController {
   private voiceService = VoiceService.getShared();
@@ -126,24 +127,7 @@ export default class InfoController {
       ) {
         throw new Error("Not authorized to delete this meme");
       }
-      // await db.delete(Memes).where(eq(Memes.id, id));
-      await interaction.followUp(
-        <Message flags={MessageFlags.Ephemeral}>
-          <Container accent_color={0xff0000}>
-            <TextDisplay>
-              Are you sure you want to delete this meme?
-            </TextDisplay>
-            <ActionRow>
-              <Button style={ButtonStyle.Secondary} custom_id="delete:cancel">
-                Cancel
-              </Button>
-              <Button style={ButtonStyle.Danger} custom_id="delete:confirm">
-                Delete
-              </Button>
-            </ActionRow>
-          </Container>
-        </Message>
-      );
+      await interaction.followUp(<DeleteConfirmation id={id} />);
     } catch (e) {
       interaction.followUp(<ErrorMessage ephemeral={true} error={e} />);
     }

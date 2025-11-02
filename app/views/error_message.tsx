@@ -22,9 +22,16 @@ export class ErrorMessage {
     if (ephemeral) messageProps.flags = MessageFlags.Ephemeral;
     let name: string;
     let message: string;
+    let stackTrace = "";
     if (error instanceof Error) {
       name = error.name;
       message = error.message;
+      if (error.stack) {
+        stackTrace = `
+\`\`\`
+${error.stack}
+\`\`\``;
+      }
     } else if (typeof error === "string") {
       name = "Error";
       message = error;
@@ -33,7 +40,7 @@ export class ErrorMessage {
       message = "An unknown error occurred";
     }
     const output = `# ${name}
-${message}`;
+${message}${stackTrace}`;
     return (
       <Message {...messageProps} allowedMentions={{ parse: [] }}>
         <Container accent_color={RED}>
