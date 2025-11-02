@@ -76,7 +76,7 @@ export class MemeInfo {
     const error = this.getErrorMessage();
     return (
       <Message allowedMentions={{ parse: [] }}>
-        <Container accent_color={Bun.hash.crc32(id) % 0x1000000}>
+        <Container accent_color={Bun.hash.crc32(name) % 0x1000000}>
           <Section accessory={thumbnail}>
             <TextDisplay>{info}</TextDisplay>
           </Section>
