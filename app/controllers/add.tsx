@@ -1,7 +1,6 @@
 import {
   ButtonStyle,
   ChatInputCommandInteraction,
-  MessageFlags,
   ModalSubmitInteraction,
 } from "discord.js";
 import { AudioService } from "../services/audio_service";
@@ -14,6 +13,7 @@ import { ActionRow, Button, Modal } from "mango";
 import { DownloadFields } from "../views/download_fields";
 import { InfoFields } from "../views/info_fields";
 import { ErrorMessage } from "../views/error_message";
+import { unlink } from "fs/promises";
 
 export default class AddController {
   private voiceService = VoiceService.getShared();
@@ -100,6 +100,8 @@ export default class AddController {
         acl: "public-read",
         type: "image/png",
       });
+
+      await unlink(waveformFile);
 
       await interaction.editReply(
         <MemeInfo info={await MemeInfo.getInfo(id)} />
