@@ -88,17 +88,20 @@ export default class EditController {
       await audioService.download();
     await this.voiceService.play(file);
 
-    await db.update(Meme).set({
-      start,
-      end,
-      sourceUrl: parsedSourceUrl,
-      loudnessI: loudness.output_i,
-      loudnessLra: loudness.output_lra,
-      loudnessThresh: loudness.output_thresh,
-      loudnessTp: loudness.output_tp,
-      ...stats,
-      updatedAt: sql`(unixepoch())`,
-    });
+    await db
+      .update(Meme)
+      .set({
+        start,
+        end,
+        sourceUrl: parsedSourceUrl,
+        loudnessI: loudness.output_i,
+        loudnessLra: loudness.output_lra,
+        loudnessThresh: loudness.output_thresh,
+        loudnessTp: loudness.output_tp,
+        ...stats,
+        updatedAt: sql`(unixepoch())`,
+      })
+      .where(eq(Meme.id, id));
 
     await Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
       acl: "public-read",
