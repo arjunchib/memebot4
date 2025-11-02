@@ -1,6 +1,13 @@
 import { $ } from "bun";
 import { env } from "../app/services/env_service";
 
+if (!env.seedBucket) {
+  // Abort if seed value is not set.
+  // Don't set this value in prod,
+  // since we never want to seed on prod!
+  throw new Error("SEED_BUCKET value not set!");
+}
+
 const AWS_ENV = {
   AWS_ACCESS_KEY_ID: env.s3AccessKeyId,
   AWS_SECRET_ACCESS_KEY: env.s3SecretAccessKey,

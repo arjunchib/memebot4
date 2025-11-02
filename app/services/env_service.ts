@@ -8,7 +8,7 @@ function ensure(name: string) {
 export class EnvService {
   applicationId = ensure("APPLICATION_ID");
   token = ensure("TOKEN");
-  seedBucket = ensure("SEED_BUCKET");
+  seedBucket = Bun.env.SEED_BUCKET;
   s3AccessKeyId = ensure("S3_ACCESS_KEY_ID");
   s3SecretAccessKey = ensure("S3_SECRET_ACCESS_KEY");
   s3Endpoint = ensure("S3_ENDPOINT");
