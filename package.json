@@ -13,7 +13,8 @@
     "start": "bun ./app/main.ts",
     "deps": "bun ./scripts/deps.ts",
     "seed": "bun ./db/seed.ts",
-    "migrate": "bun ./db/migrate.ts"
+    "db:migrate": "bun ./db/migrate.ts",
+    "db:generate": "drizzle-kit generate"
   },
   "private": true,
   "type": "module",

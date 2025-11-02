@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
-import { MemeTag, KeyValue, Command, Meme, Tag } from "./schema";
+import { MemeTag, KV, Command, Meme, Tag } from "./schema";
 import {
   CommandRelations,
   MemeTagRelations,
@@ -17,7 +17,7 @@ export const db = drizzle(sqlite, {
     commands: Command,
     tags: Tag,
     memeTags: MemeTag,
-    keyValue: KeyValue,
+    kv: KV,
     MemeRelations,
     CommandRelations,
     TagRelations,

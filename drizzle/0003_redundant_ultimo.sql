@@ -1,0 +1,1 @@
+ALTER TABLE `keyValue` RENAME TO `kv`;

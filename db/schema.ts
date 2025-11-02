@@ -88,7 +88,7 @@ export const MemeTag = sqliteTable(
   }
 );
 
-export const KeyValue = sqliteTable("keyValue", {
+export const KV = sqliteTable("kv", {
   key: text("key").primaryKey(),
   value: text("value", { mode: "json" }).notNull(),
 });
