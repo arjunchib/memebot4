@@ -1,4 +1,4 @@
-import { MessageFlags, ModalSubmitInteraction } from "discord.js";
+import { ModalSubmitInteraction } from "discord.js";
 import { AudioService } from "../services/audio_service";
 import { VoiceService } from "../services/voice_service";
 import { Command, Meme, MemeTag, Tag } from "../../db/schema";
@@ -7,7 +7,6 @@ import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { MemeInfo } from "../views/meme_info";
 import { InfoFields } from "../views/info_fields";
 import { DownloadFields } from "../views/download_fields";
-import { Message } from "mango";
 import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 
