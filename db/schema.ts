@@ -91,4 +91,5 @@ export const MemeTag = sqliteTable(
 export const KV = sqliteTable("kv", {
   key: text("key").primaryKey(),
   value: text("value", { mode: "json" }).notNull(),
+  exp: integer("exp", { mode: "timestamp" }),
 });

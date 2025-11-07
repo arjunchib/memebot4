@@ -1,4 +1,5 @@
 import {
+  ButtonInteraction,
   ButtonStyle,
   ChatInputCommandInteraction,
   ModalSubmitInteraction,
@@ -14,6 +15,18 @@ import { DownloadFields } from "../views/download_fields";
 import { InfoFields } from "../views/info_fields";
 import { ErrorMessage } from "../views/error_message";
 import { unlink } from "fs/promises";
+import { kv } from "../services/kv_service";
+
+interface AddFields {
+  sourceUrl?: string;
+  start?: string;
+  end?: string;
+  tags?: string[];
+  commands?: string[];
+  name?: string;
+}
+
+const DAY = 1000 * 60 * 60 * 24;
 
 export default class AddController {
   async onChatInput(interaction: ChatInputCommandInteraction) {
@@ -27,14 +40,29 @@ export default class AddController {
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
     await interaction.deferReply();
+    const id = Bun.randomUUIDv7();
 
     try {
       // Get fields
-      const id = Bun.randomUUIDv7();
       const author = interaction.user;
       const { sourceUrl, start, end } = DownloadFields.parse(interaction);
       const { tags, commands, name } = InfoFields.parse(interaction);
 
+      // Save fields
+      await kv.set<AddFields>(
+        `add:${id}`,
+        {
+          sourceUrl,
+          start,
+          end,
+          tags,
+          commands,
+          name,
+        },
+        new Date(Date.now() + DAY)
+      );
+
+      // Parse name
       if (!name) {
         throw new Error("No commands provided");
       }
@@ -106,14 +134,30 @@ export default class AddController {
       );
     } catch (e) {
       interaction.editReply(
-        <ErrorMessage error={e}>
+        <ErrorMessage error={e} ephemeral>
           <ActionRow>
-            <Button style={ButtonStyle.Secondary} custom_id="add:retry">
+            <Button style={ButtonStyle.Secondary} custom_id={`add:retry:${id}`}>
               Try Again
             </Button>
           </ActionRow>
         </ErrorMessage>
       );
+    }
+  }
+
+  async onButton(interaction: ButtonInteraction) {
+    try {
+      const [, , id] = interaction.customId.split(":");
+      const { sourceUrl, start, end, tags, commands, name } =
+        await kv.get<AddFields>(`add:${id}`);
+      await interaction.showModal(
+        <Modal title="Add meme" custom_id="add">
+          <DownloadFields {...{ sourceUrl, start, end }} />
+          <InfoFields {...{ commands, tags, name }} />
+        </Modal>
+      );
+    } catch (e) {
+      await interaction.followUp(<ErrorMessage error={e} ephemeral />);
     }
   }
 }

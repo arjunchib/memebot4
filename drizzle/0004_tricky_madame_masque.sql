@@ -1,0 +1,1 @@
+ALTER TABLE `kv` ADD `exp` integer;

@@ -3,8 +3,8 @@ import { db } from "../../db/database";
 import { KV } from "../../db/schema";
 
 export class KvService {
-  async set(key: string, value: unknown) {
-    await db.insert(KV).values({ key, value }).onConflictDoNothing();
+  async set<T>(key: string, value: T, exp?: Date) {
+    await db.insert(KV).values({ key, value, exp }).onConflictDoNothing();
   }
 
   async get<T>(key: string): Promise<T> {
