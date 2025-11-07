@@ -59,7 +59,7 @@ export default class AddController {
       const audioService = new AudioService({ id, sourceUrl, start, end });
       const { file, waveformFile, loudness, parsedSourceUrl, stats } =
         await audioService.download();
-      await VoiceService.shared.play(file);
+      await VoiceService.shared.play(interaction, file);
 
       await db.transaction(async (tx) => {
         await tx.insert(Meme).values({

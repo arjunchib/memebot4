@@ -10,6 +10,7 @@ import {
 import { Readable } from "stream";
 import { client } from "../main";
 import { env } from "./env_service";
+import { type Interaction } from "discord.js";
 
 export class VoiceService {
   static #shared: VoiceService;
@@ -26,15 +27,16 @@ export class VoiceService {
     console.error(error);
   });
 
-  async play(file: string) {
+  async play(interaction: Interaction, file: string) {
     if (this.player.state.status === AudioPlayerStatus.Playing) {
       throw new Error("Meme already playing");
     }
-    const guild = await client.guilds.fetch(env.guildId);
+    const { guildId, channelId } = this.getChannelInfo(interaction);
+    const guild = await client.guilds.fetch(guildId);
     const resource = this.getResource(file);
     const voiceConn = joinVoiceChannel({
-      channelId: env.channelId,
-      guildId: env.guildId,
+      channelId,
+      guildId,
       selfDeaf: true,
       selfMute: false,
       adapterCreator: guild.voiceAdapterCreator,
@@ -51,6 +53,19 @@ export class VoiceService {
         voiceConn.destroy();
       }
     });
+  }
+
+  private getChannelInfo(interaction: Interaction) {
+    const { member } = interaction;
+    if (member && "voice" in member) {
+      const channelId = member.voice.channelId;
+      const guildId = interaction.guildId;
+      if (guildId && channelId) {
+        return { channelId, guildId };
+      }
+    }
+    const { channelId, guildId } = env;
+    return { channelId, guildId };
   }
 
   private async getResource(file: string) {

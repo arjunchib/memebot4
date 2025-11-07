@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
-import { Command, Meme, MemeTag, Tag } from "../../db/schema";
+import { Meme, MemeTag, Tag } from "../../db/schema";
 
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
@@ -23,6 +23,7 @@ export default class RandomController {
       const meme = memes[randIdx];
       if (!meme) throw new Error(`Cannot find meme`);
       await VoiceService.shared.play(
+        interaction,
         `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
       );
       await interaction.reply(`Playing *${meme.name}*`);

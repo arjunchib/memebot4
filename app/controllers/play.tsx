@@ -24,6 +24,7 @@ export default class PlayController {
       const meme = command?.meme;
       if (!meme) throw new Error(`Cannot find meme with name "${name}"`);
       await VoiceService.shared.play(
+        interaction,
         `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
       );
       await interaction.reply(`Playing *${name}*`);
