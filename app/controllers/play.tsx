@@ -8,29 +8,38 @@ import { Command, Meme } from "../../db/schema";
 
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
+import { ErrorMessage } from "../views/error_message";
 
 export default class PlayController {
   async onChatInput(interaction: ChatInputCommandInteraction) {
-    const name = interaction.options.getString("meme");
-    if (!name) return await interaction.reply(`404 Meme not found`);
-    const command = await db.query.commands.findFirst({
-      where: eq(Command.name, name),
-      with: { meme: { columns: { id: true, name: true, playCount: true } } },
-    });
-    const meme = command?.meme;
-    if (!meme) return await interaction.reply(`404 Meme not found`);
-    await VoiceService.shared.play(
-      `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
-    );
-    interaction.reply(`Playing ${name}`);
-    await db
-      .update(Meme)
-      .set({
-        playCount: meme.playCount + 1,
-        // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
-        updatedAt: sql`(unixepoch())`,
-      })
-      .where(eq(Meme.id, meme.id));
+    try {
+      const name = interaction.options.getString("meme");
+      if (!name) throw new Error(`Cannot find meme`);
+      const command = await db.query.commands.findFirst({
+        where: eq(Command.name, name),
+        with: { meme: { columns: { id: true, name: true, playCount: true } } },
+      });
+      const meme = command?.meme;
+      if (!meme) throw new Error(`Cannot find meme with name "${name}"`);
+      await VoiceService.shared.play(
+        `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
+      );
+      await interaction.reply(`Playing ${name}`);
+      await db
+        .update(Meme)
+        .set({
+          playCount: meme.playCount + 1,
+          // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
+          updatedAt: sql`(unixepoch())`,
+        })
+        .where(eq(Meme.id, meme.id));
+    } catch (e) {
+      if (interaction.replied) {
+        interaction.followUp(<ErrorMessage error={e} ephemeral />);
+      } else {
+        interaction.reply(<ErrorMessage error={e} ephemeral />);
+      }
+    }
   }
 
   async onAutocomplete(interaction: AutocompleteInteraction) {

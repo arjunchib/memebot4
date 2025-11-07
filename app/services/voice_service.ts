@@ -27,6 +27,9 @@ export class VoiceService {
   });
 
   async play(file: string) {
+    if (this.player.state.status === AudioPlayerStatus.Playing) {
+      throw new Error("Meme already playing");
+    }
     const guild = await client.guilds.fetch(env.guildId);
     const resource = this.getResource(file);
     const voiceConn = joinVoiceChannel({
