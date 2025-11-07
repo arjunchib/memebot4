@@ -24,7 +24,7 @@ export default class PlayController {
       await VoiceService.shared.play(
         `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
       );
-      await interaction.reply(`Playing ${name}`);
+      await interaction.reply(`Playing *${name}*`);
       await db
         .update(Meme)
         .set({

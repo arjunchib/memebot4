@@ -11,6 +11,7 @@
   },
   "scripts": {
     "start": "bun ./app/main.ts",
+    "push": "mango push",
     "deps": "bun ./scripts/deps.ts",
     "seed": "bun ./db/seed.ts",
     "db:migrate": "bun ./db/migrate.ts",
