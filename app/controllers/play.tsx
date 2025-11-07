@@ -1,6 +1,7 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  MessageFlags,
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
@@ -9,6 +10,7 @@ import { Command, Meme } from "../../db/schema";
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
 import { ErrorMessage } from "../views/error_message";
+import { Message } from "mango";
 
 export default class PlayController {
   async onChatInput(interaction: ChatInputCommandInteraction) {
@@ -34,10 +36,15 @@ export default class PlayController {
         })
         .where(eq(Meme.id, meme.id));
     } catch (e) {
+      if (e instanceof Error && e.message === "Meme already playing") {
+        return interaction.reply(
+          <Message flags={MessageFlags.Ephemeral}>Meme already playing</Message>
+        );
+      }
       if (interaction.replied) {
-        interaction.followUp(<ErrorMessage error={e} ephemeral />);
+        await interaction.followUp(<ErrorMessage error={e} ephemeral />);
       } else {
-        interaction.reply(<ErrorMessage error={e} ephemeral />);
+        await interaction.reply(<ErrorMessage error={e} ephemeral />);
       }
     }
   }
