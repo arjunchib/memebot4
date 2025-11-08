@@ -7,13 +7,17 @@ export class KvService {
     await db.insert(KV).values({ key, value, exp }).onConflictDoNothing();
   }
 
-  async get<T>(key: string): Promise<T> {
-    const { value } =
-      (await db.query.kv.findFirst({
-        where: eq(KV.key, key),
-        columns: { value: true },
-      })) ?? {};
-    return value as T;
+  async get<T>(key: string): Promise<T | null> {
+    const value = await db.query.kv.findFirst({
+      where: eq(KV.key, key),
+      columns: { value: true, exp: true },
+    });
+    if (!value) return null;
+    if (value.exp && value.exp <= new Date()) {
+      await db.delete(KV).where(eq(KV.key, key));
+      return null;
+    }
+    return value.value as T;
   }
 }
 
