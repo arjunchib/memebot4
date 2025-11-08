@@ -1,4 +1,4 @@
-import { MessageFlags, type ButtonInteraction } from "discord.js";
+import { type ButtonInteraction } from "discord.js";
 import { createValidator } from "../helpers";
 import { Container, Message, TextDisplay } from "mango";
 import { ErrorMessage } from "../views/error_message";

@@ -1,22 +1,13 @@
 import {
   AutocompleteInteraction,
   ButtonInteraction,
-  ButtonStyle,
   ChatInputCommandInteraction,
-  MessageFlags,
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
 import { Command, Meme } from "../../db/schema";
 import { MemeInfo } from "../views/meme_info";
-import {
-  ActionRow,
-  Button,
-  Container,
-  Message,
-  Modal,
-  TextDisplay,
-} from "mango";
+import { Message, Modal } from "mango";
 import { DownloadFields } from "../views/download_fields";
 import { InfoFields } from "../views/info_fields";
 import { VoiceService } from "../services/voice_service";
