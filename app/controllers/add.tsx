@@ -148,8 +148,9 @@ export default class AddController {
   async onButton(interaction: ButtonInteraction) {
     try {
       const [, , id] = interaction.customId.split(":");
-      const { sourceUrl, start, end, tags, commands, name } =
-        await kv.get<AddFields>(`add:${id}`);
+      const fields = await kv.get<AddFields>(`add:${id}`);
+      if (!fields) throw new Error("Cannot find fields");
+      const { sourceUrl, start, end, tags, commands, name } = fields;
       await interaction.showModal(
         <Modal title="Add meme" custom_id="add">
           <DownloadFields {...{ sourceUrl, start, end }} />
