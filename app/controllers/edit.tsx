@@ -81,7 +81,7 @@ export default class EditController {
     const audioService = new AudioService({ id, sourceUrl, start, end });
     const { file, waveformFile, loudness, parsedSourceUrl, stats } =
       await audioService.download();
-    await VoiceService.shared.play(file);
+    await VoiceService.shared.play(interaction, file);
 
     await db
       .update(Meme)
@@ -98,15 +98,16 @@ export default class EditController {
       })
       .where(eq(Meme.id, id));
 
-    await Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
-      acl: "public-read",
-      type: "audio/webm",
-    });
-
-    await Bun.s3.write(`waveform/${id}.png`, Bun.file(waveformFile), {
-      acl: "public-read",
-      type: "image/png",
-    });
+    await Promise.all([
+      Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
+        acl: "public-read",
+        type: "audio/webm",
+      }),
+      Bun.s3.write(`waveform/${id}.png`, Bun.file(waveformFile), {
+        acl: "public-read",
+        type: "image/png",
+      }),
+    ]);
 
     await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
   }
