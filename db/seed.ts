@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { $, S3Client } from "bun";
 import { env } from "../app/services/env_service";
 
 if (!env.seedBucket) {
@@ -14,8 +14,10 @@ const AWS_ENV = {
   AWS_ENDPOINT_URL: env.s3Endpoint,
 };
 
+const s3 = new S3Client({ bucket: env.seedBucket });
+
 console.log("Downloading backup");
-let buffer = await Bun.s3.file("backup/backup.sql.br").arrayBuffer();
+let buffer = await s3.file("backup/backup.sql.br").arrayBuffer();
 
 console.log("Decompressing backup");
 buffer = await $`brotli -d - < ${buffer}`.arrayBuffer();
