@@ -1,4 +1,3 @@
-import { unlink } from "fs/promises";
 import { readdir } from "fs/promises";
 
 interface AudioServiceOptions {
@@ -30,9 +29,7 @@ export class AudioService {
     await this.trimAndConvert(rawFile);
     let loudness = await this.loudnorm();
     loudness = await this.loudnorm(loudness);
-    const stats = await this.ffprobe();
-    await this.waveform();
-    await unlink(this.trimmedFile);
+    const [stats] = await Promise.all([this.ffprobe(), this.waveform()]);
     return {
       file: this.file,
       waveformFile: this.waveformFile,

@@ -117,17 +117,16 @@ export default class AddController {
         }
       });
 
-      await Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
-        acl: "public-read",
-        type: "audio/webm",
-      });
-
-      await Bun.s3.write(`waveform/${id}.png`, Bun.file(waveformFile), {
-        acl: "public-read",
-        type: "image/png",
-      });
-
-      await unlink(waveformFile);
+      await Promise.all([
+        Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
+          acl: "public-read",
+          type: "audio/webm",
+        }),
+        Bun.s3.write(`waveform/${id}.png`, Bun.file(waveformFile), {
+          acl: "public-read",
+          type: "image/png",
+        }),
+      ]);
 
       await interaction.editReply(
         <MemeInfo info={await MemeInfo.getInfo(id)} />
