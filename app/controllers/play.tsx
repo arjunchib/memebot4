@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
-import { Command, Meme } from "../../db/schema";
+import { Command, Meme, Play } from "../../db/schema";
 
 import { VoiceService } from "../services/voice_service";
 import { env } from "../services/env_service";
@@ -27,6 +27,7 @@ export default class PlayController {
         interaction,
         `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
       );
+      const playedAt = new Date();
       await interaction.reply(`Playing *${name}*`);
       await db
         .update(Meme)
@@ -36,6 +37,12 @@ export default class PlayController {
           updatedAt: sql`(unixepoch())`,
         })
         .where(eq(Meme.id, meme.id));
+      await db.insert(Play).values({
+        playedAt,
+        playedBy: interaction.user.id,
+        isRandom: false,
+        memeId: meme.id,
+      });
     } catch (e) {
       if (e instanceof Error && e.message === "Meme already playing") {
         return interaction.reply(

@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { db } from "../../db/database";
 import { eq, like, sql } from "drizzle-orm";
-import { Command, Meme } from "../../db/schema";
+import { Command, Meme, Play } from "../../db/schema";
 import { MemeInfo } from "../views/meme_info";
 import { Message, Modal } from "mango";
 import { DownloadFields } from "../views/download_fields";
@@ -58,13 +58,12 @@ export default class InfoController {
       where: eq(Meme.id, id),
       columns: { id: true, name: true, playCount: true },
     });
-
     if (!meme) throw new Error("No meme");
-
+    const playedAt = new Date();
     await VoiceService.shared.play(
+      interaction,
       `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
     );
-
     await db
       .update(Meme)
       .set({
@@ -73,6 +72,12 @@ export default class InfoController {
         updatedAt: sql`(unixepoch())`,
       })
       .where(eq(Meme.id, meme.id));
+    await db.insert(Play).values({
+      playedAt,
+      playedBy: interaction.user.id,
+      isRandom: false,
+      memeId: meme.id,
+    });
   }
 
   private async edit(interaction: ButtonInteraction, id: string) {

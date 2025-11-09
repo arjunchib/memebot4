@@ -93,3 +93,15 @@ export const KV = sqliteTable("kv", {
   value: text("value", { mode: "json" }).notNull(),
   exp: integer("exp", { mode: "timestamp" }),
 });
+
+export const Play = sqliteTable("plays", {
+  playedAt: integer("played_at", { mode: "timestamp" }).notNull(),
+  playedBy: text("played_by").notNull(),
+  isRandom: integer("is_random", { mode: "boolean" }).notNull(),
+  memeId: text("meme_id")
+    .notNull()
+    .references(() => Meme.id, {
+      onDelete: "no action",
+      onUpdate: "cascade",
+    }),
+});
