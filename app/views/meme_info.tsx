@@ -60,7 +60,7 @@ export class MemeInfo {
     const tags = memeTags.map((mt) => mt.tagName);
     const trim = ` (${start || ""}..${end || ""})`;
     const info = `# ${name}
-- created: ${new Date().toDateString()}
+- created: ${createdAt.toDateString()}
 - author: ${authorId ? `<@${authorId}>` : "Unknown"}
 - duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
 - commands: ${commands.map((c) => c.name).join(", ")}
