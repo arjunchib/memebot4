@@ -63,6 +63,10 @@ export class AudioService {
     }
     const args = [
       "yt-dlp",
+      "--js-runtimes",
+      "bun",
+      "--remote-components",
+      "ejs:npm",
       "-f",
       "ba/b",
       "--prefer-free-formats",
