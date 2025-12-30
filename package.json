@@ -11,6 +11,7 @@
   },
   "scripts": {
     "start": "bun ./app/main.ts",
+    "task": "bun ./scripts/task.ts",
     "push": "mango push",
     "deps": "bun ./scripts/deps.ts",
     "seed": "bun ./db/seed.ts",
@@ -23,6 +24,7 @@
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.19.0",
     "@snazzah/davey": "^0.1.7",
+    "change-case": "^5.4.4",
     "cronbake": "^0.3.1",
     "discord.js": "^14.22.1",
     "drizzle-orm": "^0.44.6",

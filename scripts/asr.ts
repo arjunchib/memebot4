@@ -75,7 +75,7 @@ const meme = await db.query.memes.findFirst({
   where: eq(Meme.name, "themets"),
 });
 if (!meme) throw new Error("no meme");
-const url = `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`;
+const url = `${env.assetBaseUrl}/audio/${meme.id}.webm`;
 console.log(meme.name, url);
 // const res = await fetch(
 //   `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`

@@ -9,6 +9,7 @@ import { InfoFields } from "../views/info_fields";
 import { DownloadFields } from "../views/download_fields";
 import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
+import { s3 } from "../services/s3_service";
 
 type ActionType = "edit" | "redownload";
 
@@ -99,12 +100,10 @@ export default class EditController {
       .where(eq(Meme.id, id));
 
     await Promise.all([
-      Bun.s3.write(`audio/${id}.webm`, Bun.file(file), {
-        acl: "public-read",
+      s3.public.write(`audio/${id}.webm`, Bun.file(file), {
         type: "audio/webm",
       }),
-      Bun.s3.write(`waveform/${id}.png`, Bun.file(waveformFile), {
-        acl: "public-read",
+      s3.public.write(`waveform/${id}.png`, Bun.file(waveformFile), {
         type: "image/png",
       }),
     ]);

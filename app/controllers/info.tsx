@@ -62,7 +62,7 @@ export default class InfoController {
     const playedAt = new Date();
     await VoiceService.shared.play(
       interaction,
-      `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
+      `${env.assetBaseUrl}/audio/${meme.id}.webm`
     );
     await db
       .update(Meme)

@@ -25,7 +25,7 @@ const meme = await getMeme();
 
 if (!meme) throw new Error("No meme");
 
-const url = `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`;
+const url = `${env.assetBaseUrl}/audio/${meme.id}.webm`;
 console.log(meme.name, url);
 
 const prompt = args.at(1) || "";

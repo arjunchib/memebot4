@@ -16,6 +16,7 @@ export class EnvService {
   guildId = ensure("GUILD_ID");
   channelId = ensure("CHANNEL_ID");
   adminId = ensure("ADMIN_ID");
+  assetBaseUrl = ensure("ASSET_BASE_URL");
 }
 
 export const env = new EnvService();

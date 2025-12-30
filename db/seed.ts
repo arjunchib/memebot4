@@ -1,6 +1,9 @@
 import { $, S3Client } from "bun";
 import { env } from "../app/services/env_service";
 
+// Don't run the seed file until we fix this
+throw new Error("Not implemented yet!");
+
 if (!env.seedBucket) {
   // Abort if seed value is not set.
   // Don't set this value in prod,

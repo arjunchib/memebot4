@@ -69,7 +69,7 @@ export class MemeInfo {
     const thumbnail = (
       <Thumbnail
         media={{
-          url: `${env.s3Endpoint}/${env.s3Bucket}/waveform/${id}.png`,
+          url: `${env.assetBaseUrl}/waveform/${id}.png`,
         }}
       />
     );

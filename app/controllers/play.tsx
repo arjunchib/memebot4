@@ -25,7 +25,7 @@ export default class PlayController {
       if (!meme) throw new Error(`Cannot find meme with name "${name}"`);
       await VoiceService.shared.play(
         interaction,
-        `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
+        `${env.assetBaseUrl}/audio/${meme.id}.webm`
       );
       const playedAt = new Date();
       await interaction.reply(`Playing *${name}*`);

@@ -24,7 +24,7 @@ export default class RandomController {
       if (!meme) throw new Error(`Cannot find meme`);
       await VoiceService.shared.play(
         interaction,
-        `${env.s3Endpoint}/${env.s3Bucket}/audio/${meme.id}.webm`
+        `${env.assetBaseUrl}/audio/${meme.id}.webm`
       );
       const playedAt = new Date();
       await interaction.reply(`Playing *${meme.name}*`);
