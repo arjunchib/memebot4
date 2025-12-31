@@ -56,6 +56,7 @@ export class MemeInfo {
       createdAt,
       memeTags,
       commands,
+      playCount,
     } = this.props.info;
     const tags = memeTags.map((mt) => mt.tagName);
     const trim = ` (${start || ""}..${end || ""})`;
@@ -63,6 +64,7 @@ export class MemeInfo {
 - created: ${createdAt.toDateString()}
 - author: ${authorId ? `<@${authorId}>` : "Unknown"}
 - duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
+- plays: ${playCount}
 - commands: ${commands.map((c) => c.name).join(", ")}
 - tags: ${tags.length ? tags.join(", ") : "*None*"}
 -# ${id}`;
