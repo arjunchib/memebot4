@@ -13,6 +13,7 @@ export class EnvService {
   s3SecretAccessKey = ensure("S3_SECRET_ACCESS_KEY");
   s3Endpoint = ensure("S3_ENDPOINT");
   s3Bucket = ensure("S3_BUCKET");
+  s3BucketPublic = ensure("S3_BUCKET_PUBLIC");
   guildId = ensure("GUILD_ID");
   channelId = ensure("CHANNEL_ID");
   adminId = ensure("ADMIN_ID");

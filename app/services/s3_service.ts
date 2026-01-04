@@ -3,32 +3,33 @@ import { S3Client as AWSS3Client, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { env } from "./env_service";
 
 class S3Service {
-  public public = new S3Client({ bucket: "memebot-staging-public" });
-  public private = new S3Client({ bucket: "memebot-staging" });
+  public public = new S3Client({ bucket: env.s3BucketPublic });
+  public private = new S3Client();
 }
 
 class S3Client extends BunS3Client {
   private _awsClient?: AWSS3Client;
 
-  constructor(private options: S3Options) {
+  constructor(private options?: S3Options) {
     super(options);
   }
 
   private get awsClient() {
     return (this._awsClient ||= new AWSS3Client({
-      region: this.options.region ?? "auto",
-      endpoint: this.options.endpoint ?? env.s3Endpoint,
+      region: this.options?.region ?? "auto",
+      endpoint: this.options?.endpoint ?? env.s3Endpoint,
       credentials: {
-        accessKeyId: this.options.accessKeyId ?? env.s3AccessKeyId,
-        secretAccessKey: this.options.secretAccessKey ?? env.s3SecretAccessKey,
+        accessKeyId: this.options?.accessKeyId ?? env.s3AccessKeyId,
+        secretAccessKey: this.options?.secretAccessKey ?? env.s3SecretAccessKey,
       },
     }));
   }
 
   async copy(source: string, destination: string) {
+    const bucket = this.options?.bucket ?? env.s3Bucket;
     const command = new CopyObjectCommand({
-      Bucket: this.options.bucket,
-      CopySource: `${this.options.bucket}/${source}`,
+      Bucket: bucket,
+      CopySource: `${bucket}/${source}`,
       Key: destination,
     });
     await this.awsClient.send(command);
