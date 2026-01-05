@@ -78,6 +78,7 @@ export default class InfoController {
       isRandom: false,
       memeId: meme.id,
     });
+    await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
   }
 
   private async edit(interaction: ButtonInteraction, id: string) {
