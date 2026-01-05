@@ -10,7 +10,6 @@ import {
   Thumbnail,
 } from "mango";
 import { Meme } from "../../db/schema";
-import { withinLastHour } from "../helpers";
 import { db } from "../../db/database";
 import { eq } from "drizzle-orm";
 import { env } from "../services/env_service";
@@ -90,14 +89,12 @@ export class MemeInfo {
             <Button style={ButtonStyle.Secondary} custom_id={`info:edit:${id}`}>
               Edit
             </Button>
-            {withinLastHour(createdAt) && (
-              <Button
-                style={ButtonStyle.Secondary}
-                custom_id={`info:redownload:${id}`}
-              >
-                Redownload
-              </Button>
-            )}
+            <Button
+              style={ButtonStyle.Secondary}
+              custom_id={`info:redownload:${id}`}
+            >
+              Update Audio
+            </Button>
             {sourceUrl && (
               <Button style={ButtonStyle.Link} url={sourceUrl}>
                 Source

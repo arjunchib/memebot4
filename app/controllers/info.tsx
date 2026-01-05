@@ -15,6 +15,7 @@ import { env } from "../services/env_service";
 import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 import { DeleteConfirmation } from "../views/delete_confirmation";
+import { s3 } from "../services/s3_service";
 
 export default class InfoController {
   private isValidAction = createValidator(
@@ -62,7 +63,7 @@ export default class InfoController {
     const playedAt = new Date();
     await VoiceService.shared.play(
       interaction,
-      `${env.assetBaseUrl}/audio/${meme.id}.webm`
+      s3.public.file(`audio/${meme.id}.webm`)
     );
     await db
       .update(Meme)

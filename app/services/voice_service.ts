@@ -11,6 +11,7 @@ import { Readable } from "stream";
 import { client } from "../main";
 import { env } from "./env_service";
 import { type Interaction } from "discord.js";
+import type { S3File } from "bun";
 
 export class VoiceService {
   static #shared: VoiceService;
@@ -27,7 +28,7 @@ export class VoiceService {
     console.error(error);
   });
 
-  async play(interaction: Interaction, file: string) {
+  async play(interaction: Interaction, file: string | Bun.S3File) {
     if (this.player.state.status === AudioPlayerStatus.Playing) {
       throw new Error("Meme already playing");
     }
@@ -68,13 +69,15 @@ export class VoiceService {
     return { channelId, guildId };
   }
 
-  private async getResource(file: string) {
+  private async getResource(file: string | S3File) {
     const readable = await this.getReadable(file);
     return createAudioResource(readable, { inputType: StreamType.WebmOpus });
   }
 
-  private async getReadable(file: string) {
-    if (URL.canParse(file)) {
+  private async getReadable(file: string | S3File) {
+    if (typeof file !== "string") {
+      return Readable.fromWeb(file.stream());
+    } else if (URL.canParse(file)) {
       const res = await fetch(file);
       return Readable.fromWeb((await res.blob()).stream());
     } else {

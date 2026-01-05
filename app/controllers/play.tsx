@@ -8,9 +8,9 @@ import { eq, like, sql } from "drizzle-orm";
 import { Command, Meme, Play } from "../../db/schema";
 
 import { VoiceService } from "../services/voice_service";
-import { env } from "../services/env_service";
 import { ErrorMessage } from "../views/error_message";
 import { Message } from "mango";
+import { s3 } from "../services/s3_service";
 
 export default class PlayController {
   async onChatInput(interaction: ChatInputCommandInteraction) {
@@ -23,9 +23,10 @@ export default class PlayController {
       });
       const meme = command?.meme;
       if (!meme) throw new Error(`Cannot find meme with name "${name}"`);
+
       await VoiceService.shared.play(
         interaction,
-        `${env.assetBaseUrl}/audio/${meme.id}.webm`
+        s3.public.file(`audio/${meme.id}.webm`)
       );
       const playedAt = new Date();
       await interaction.reply(`Playing *${name}*`);
