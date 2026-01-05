@@ -98,10 +98,8 @@ export const Play = sqliteTable("plays", {
   playedAt: integer("played_at", { mode: "timestamp" }).notNull(),
   playedBy: text("played_by").notNull(),
   isRandom: integer("is_random", { mode: "boolean" }).notNull(),
-  memeId: text("meme_id")
-    .notNull()
-    .references(() => Meme.id, {
-      onDelete: "no action",
-      onUpdate: "cascade",
-    }),
+  memeId: text("meme_id").references(() => Meme.id, {
+    onDelete: "set null",
+    onUpdate: "cascade",
+  }),
 });
