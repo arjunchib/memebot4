@@ -1,0 +1,57 @@
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-6">Memebot</h1>
+
+  <!-- Search -->
+  <input
+    type="text"
+    placeholder="Search memes, aliases, or tags..."
+    class="w-full px-4 py-3 mb-8 rounded-lg bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+    [value]="search()"
+    (input)="onSearch($event)"
+  />
+
+  @if (memeService.loading()) {
+    <p class="text-gray-400">Loading memes...</p>
+  }
+
+  @if (memeService.error(); as err) {
+    <p class="text-red-400">{{ err }}</p>
+  }
+
+  <!-- Meme Grid -->
+  @if (!memeService.loading() && !memeService.error()) {
+    <p class="text-sm text-gray-500 mb-4">{{ filteredMemes().length }} memes</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (meme of filteredMemes(); track meme.id) {
+        <button
+          class="text-left p-4 rounded-lg border transition-colors cursor-pointer"
+          [class]="isPlaying(meme)
+            ? 'bg-indigo-900/40 border-indigo-500'
+            : 'bg-gray-900 border-gray-800 hover:border-gray-600'"
+          (click)="play(meme)"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-gray-100">{{ meme.name }}</span>
+            @if (isPlaying(meme)) {
+              <span class="text-xs text-indigo-400">&#9654; playing</span>
+            }
+          </div>
+          @if (meme.commands.length > 0) {
+            <div class="text-sm text-gray-400 mb-1">
+              @for (cmd of meme.commands; track cmd) {
+                <span class="inline-block mr-2">/{{ cmd }}</span>
+              }
+            </div>
+          }
+          @if (meme.tags.length > 0) {
+            <div class="flex flex-wrap gap-1 mt-2">
+              @for (tag of meme.tags; track tag) {
+                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">{{ tag }}</span>
+              }
+            </div>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>
