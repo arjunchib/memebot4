@@ -21,9 +21,7 @@ function getMimeType(path: string): string {
   return MIME_TYPES[ext] ?? "application/octet-stream";
 }
 
-async function handleApi(req: Request): Promise<Response | null> {
-  const url = new URL(req.url);
-
+async function handleApi(req: Request, url: URL): Promise<Response | null> {
   if (url.pathname === "/api/memes" && req.method === "GET") {
     const memes = await db.query.memes.findMany({
       columns: {
@@ -73,12 +71,21 @@ async function serveStatic(pathname: string): Promise<Response | null> {
 }
 
 export async function router(req: Request): Promise<Response> {
-  // API routes
-  const apiResponse = await handleApi(req);
-  if (apiResponse) return apiResponse;
+  const url = new URL(req.url);
+
+  // API routes first — never fall through to SPA
+  if (url.pathname.startsWith("/api/")) {
+    try {
+      const apiResponse = await handleApi(req, url);
+      if (apiResponse) return apiResponse;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Internal server error";
+      return Response.json({ error: message }, { status: 500 });
+    }
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
 
   // Static files
-  const url = new URL(req.url);
   const staticResponse = await serveStatic(url.pathname);
   if (staticResponse) return staticResponse;
 
