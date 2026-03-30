@@ -16,7 +16,8 @@
     "deps": "bun ./scripts/deps.ts",
     "seed": "bun ./db/seed.ts",
     "db:migrate": "bun ./db/migrate.ts",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "site:build": "cd site && npm exec -- ng build"
   },
   "private": true,
   "type": "module",
