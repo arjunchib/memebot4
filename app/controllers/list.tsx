@@ -3,8 +3,8 @@ import {
   ChatInputCommandInteraction,
 } from "discord.js";
 import { db } from "../../db/database";
-import { and, asc, desc, eq, like } from "drizzle-orm";
-import { Meme, MemeTag, Tag } from "../../db/schema";
+import { and, asc, desc, eq, like, sql } from "drizzle-orm";
+import { Meme, MemeTag, Play, Tag } from "../../db/schema";
 import { MemeList } from "../views/meme_list";
 import { ErrorMessage } from "../views/error_message";
 
@@ -15,40 +15,28 @@ export default class ListController {
       const tag = interaction.options.getString("tag");
       const author = interaction.options.getUser("author");
 
-      const orderBy = this.getOrderBy(sort);
+      const title = this.getTitle(sort, tag, author?.username);
       const limit = tag ? undefined : 20;
+      const showPlayCount = sort === "most-played" || sort === "least-played";
 
-      const conditions = [];
+      const conditions: any[] = [];
       if (author) conditions.push(eq(Meme.authorId, author.id));
 
-      let memes: { name: string }[];
+      let entries: string[];
 
-      if (tag) {
-        conditions.push(eq(MemeTag.tagName, tag));
-        const query = db
-          .select({ name: Meme.name })
-          .from(Meme)
-          .innerJoin(MemeTag, eq(MemeTag.memeId, Meme.id))
-          .where(conditions.length ? and(...conditions) : undefined)
-          .orderBy(orderBy);
-        memes = limit ? await query.limit(limit) : await query;
+      if (sort === "recently-played") {
+        entries = await this.getRecentlyPlayed(conditions, tag, limit);
+      } else if (showPlayCount) {
+        entries = await this.getWithPlayCount(sort!, conditions, tag, limit);
       } else {
-        const query = db
-          .select({ name: Meme.name })
-          .from(Meme)
-          .where(conditions.length ? and(...conditions) : undefined)
-          .orderBy(orderBy);
-        memes = limit ? await query.limit(limit) : await query;
+        entries = await this.getNames(conditions, tag, limit);
       }
 
-      const names = memes.map((m) => m.name);
-      const title = this.getTitle(sort, tag, author?.username);
-
-      if (names.length === 0) {
+      if (entries.length === 0) {
         return interaction.reply(<MemeList title={title} names={[]} />);
       }
 
-      const chunks = this.chunkNames(names, title);
+      const chunks = this.chunkEntries(entries, title);
       await interaction.reply(
         <MemeList title={title} names={chunks[0]!} />
       );
@@ -66,16 +54,90 @@ export default class ListController {
     }
   }
 
-  private getOrderBy(sort: string | null) {
-    switch (sort) {
-      case "most-played":
-        return desc(Meme.playCount);
-      case "least-played":
-        return asc(Meme.playCount);
-      case "recently-added":
-      default:
-        return desc(Meme.createdAt);
+  private async getNames(
+    conditions: any[],
+    tag: string | null,
+    limit: number | undefined
+  ): Promise<string[]> {
+    if (tag) {
+      conditions.push(eq(MemeTag.tagName, tag));
+      const query = db
+        .select({ name: Meme.name })
+        .from(Meme)
+        .innerJoin(MemeTag, eq(MemeTag.memeId, Meme.id))
+        .where(conditions.length ? and(...conditions) : undefined)
+        .orderBy(desc(Meme.createdAt));
+      const memes = limit ? await query.limit(limit) : await query;
+      return memes.map((m) => m.name);
     }
+
+    const query = db
+      .select({ name: Meme.name })
+      .from(Meme)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(Meme.createdAt));
+    const memes = limit ? await query.limit(limit) : await query;
+    return memes.map((m) => m.name);
+  }
+
+  private async getWithPlayCount(
+    sort: string,
+    conditions: any[],
+    tag: string | null,
+    limit: number | undefined
+  ): Promise<string[]> {
+    const orderBy =
+      sort === "most-played" ? desc(Meme.playCount) : asc(Meme.playCount);
+
+    if (tag) {
+      conditions.push(eq(MemeTag.tagName, tag));
+      const query = db
+        .select({ name: Meme.name, playCount: Meme.playCount })
+        .from(Meme)
+        .innerJoin(MemeTag, eq(MemeTag.memeId, Meme.id))
+        .where(conditions.length ? and(...conditions) : undefined)
+        .orderBy(orderBy);
+      const memes = limit ? await query.limit(limit) : await query;
+      return memes.map((m) => `${m.name} (count: ${m.playCount})`);
+    }
+
+    const query = db
+      .select({ name: Meme.name, playCount: Meme.playCount })
+      .from(Meme)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(orderBy);
+    const memes = limit ? await query.limit(limit) : await query;
+    return memes.map((m) => `${m.name} (count: ${m.playCount})`);
+  }
+
+  private async getRecentlyPlayed(
+    conditions: any[],
+    tag: string | null,
+    limit: number | undefined
+  ): Promise<string[]> {
+    if (tag) {
+      conditions.push(eq(MemeTag.tagName, tag));
+      const query = db
+        .select({ name: Meme.name })
+        .from(Meme)
+        .innerJoin(Play, eq(Play.memeId, Meme.id))
+        .innerJoin(MemeTag, eq(MemeTag.memeId, Meme.id))
+        .where(conditions.length ? and(...conditions) : undefined)
+        .groupBy(Meme.id, Meme.name)
+        .orderBy(desc(sql`MAX(${Play.playedAt})`));
+      const memes = limit ? await query.limit(limit) : await query;
+      return memes.map((m) => m.name);
+    }
+
+    const query = db
+      .select({ name: Meme.name })
+      .from(Meme)
+      .innerJoin(Play, eq(Play.memeId, Meme.id))
+      .where(conditions.length ? and(...conditions) : undefined)
+      .groupBy(Meme.id, Meme.name)
+      .orderBy(desc(sql`MAX(${Play.playedAt})`));
+    const memes = limit ? await query.limit(limit) : await query;
+    return memes.map((m) => m.name);
   }
 
   private getTitle(
@@ -91,6 +153,9 @@ export default class ListController {
       case "least-played":
         parts.push("Least Played");
         break;
+      case "recently-played":
+        parts.push("Recently Played");
+        break;
       default:
         parts.push("Recently Added");
         break;
@@ -100,21 +165,20 @@ export default class ListController {
     return parts.join(" ");
   }
 
-  // Split names into chunks that fit within Discord's ~4000 char limit
-  private chunkNames(names: string[], title: string): string[][] {
+  private chunkEntries(entries: string[], title: string): string[][] {
     const MAX_CHARS = 3900;
     const chunks: string[][] = [];
     let current: string[] = [];
     let currentLen = title.length + 10;
 
-    for (const name of names) {
-      const addition = current.length > 0 ? name.length + 2 : name.length;
+    for (const entry of entries) {
+      const addition = current.length > 0 ? entry.length + 2 : entry.length;
       if (currentLen + addition > MAX_CHARS && current.length > 0) {
         chunks.push(current);
-        current = [name];
-        currentLen = title.length + 10 + name.length;
+        current = [entry];
+        currentLen = title.length + 10 + entry.length;
       } else {
-        current.push(name);
+        current.push(entry);
         currentLen += addition;
       }
     }

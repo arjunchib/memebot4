@@ -10,6 +10,7 @@ export default (
       choices={[
         { name: "Most Played", value: "most-played" },
         { name: "Recently Added", value: "recently-added" },
+        { name: "Recently Played", value: "recently-played" },
         { name: "Least Played", value: "least-played" },
       ]}
     />
