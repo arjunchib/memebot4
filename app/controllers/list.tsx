@@ -37,12 +37,10 @@ export default class ListController {
       }
 
       const chunks = this.chunkEntries(entries, title);
-      await interaction.reply(
-        <MemeList title={title} names={chunks[0]!} />
-      );
+      await interaction.reply(<MemeList title={title} names={chunks[0]!} />);
       for (let i = 1; i < chunks.length; i++) {
         await interaction.followUp(
-          <MemeList title={`${title} (cont.)`} names={chunks[i]!} />
+          <MemeList title={`${title} (cont.)`} names={chunks[i]!} />,
         );
       }
     } catch (e) {
@@ -57,7 +55,7 @@ export default class ListController {
   private async getNames(
     conditions: any[],
     tag: string | null,
-    limit: number | undefined
+    limit: number | undefined,
   ): Promise<string[]> {
     if (tag) {
       conditions.push(eq(MemeTag.tagName, tag));
@@ -84,7 +82,7 @@ export default class ListController {
     sort: string,
     conditions: any[],
     tag: string | null,
-    limit: number | undefined
+    limit: number | undefined,
   ): Promise<string[]> {
     const orderBy =
       sort === "most-played" ? desc(Meme.playCount) : asc(Meme.playCount);
@@ -98,7 +96,7 @@ export default class ListController {
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(orderBy);
       const memes = limit ? await query.limit(limit) : await query;
-      return memes.map((m) => `${m.name} (count: ${m.playCount})`);
+      return memes.map((m) => `${m.name} (${m.playCount})`);
     }
 
     const query = db
@@ -107,13 +105,13 @@ export default class ListController {
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(orderBy);
     const memes = limit ? await query.limit(limit) : await query;
-    return memes.map((m) => `${m.name} (count: ${m.playCount})`);
+    return memes.map((m) => `${m.name} (${m.playCount})`);
   }
 
   private async getRecentlyPlayed(
     conditions: any[],
     tag: string | null,
-    limit: number | undefined
+    limit: number | undefined,
   ): Promise<string[]> {
     if (tag) {
       conditions.push(eq(MemeTag.tagName, tag));
@@ -143,7 +141,7 @@ export default class ListController {
   private getTitle(
     sort: string | null,
     tag: string | null,
-    author: string | undefined
+    author: string | undefined,
   ) {
     const parts = [];
     switch (sort) {
