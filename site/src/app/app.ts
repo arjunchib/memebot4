@@ -5,7 +5,6 @@ import type { Meme } from './models/meme';
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App implements OnInit {
   readonly search = signal('');
@@ -23,7 +22,7 @@ export class App implements OnInit {
       (m) =>
         m.name.toLowerCase().includes(query) ||
         m.commands.some((c) => c.toLowerCase().includes(query)) ||
-        m.tags.some((t) => t.toLowerCase().includes(query))
+        m.tags.some((t) => t.toLowerCase().includes(query)),
     );
   });
 
