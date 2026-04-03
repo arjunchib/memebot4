@@ -31,8 +31,44 @@ console.log(meme.name, url);
 const prompt = args.at(1) || "";
 
 console.time("transcribe");
+
+const json =
+  await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json();
+
+const tokens = json.transcription[0].tokens as {
+  text: string;
+  timestamps: {
+    from: string;
+    to: string;
+  };
+  offsets: {
+    from: number;
+    to: number;
+  };
+  id: number;
+  p: number;
+  t_dtw: number;
+}[];
+
+const format = 0;
+const red = 31;
+const green = 32;
+const yellow = 33;
+
 console.log(
-  await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -pc -nt -of -f -`.text()
+  tokens
+    .filter((token) => token.id !== 50257)
+    .map((token) => {
+      let color = green;
+      if (token.p < 0.333333) {
+        color = red;
+      } else if (token.p < 0.666666) {
+        color = yellow;
+      }
+      return `\u001b[${format};${color}m${token.text}\u001b[0m`;
+    })
+    .join(""),
 );
+
 console.log();
 console.timeEnd("transcribe");

@@ -1,4 +1,4 @@
-import { ButtonStyle } from "discord.js";
+import { ButtonStyle, codeBlock } from "discord.js";
 import {
   ActionRow,
   Button,
@@ -18,8 +18,9 @@ export class MemeInfo {
   constructor(
     private props: {
       info: Awaited<ReturnType<(typeof MemeInfo)["getInfo"]>>;
+      transcription?: string;
       error?: string | Error | unknown;
-    }
+    },
   ) {}
 
   static async getInfo(id: string) {
@@ -66,6 +67,7 @@ export class MemeInfo {
 - plays: ${playCount}
 - commands: ${commands.map((c) => c.name).join(", ")}
 - tags: ${tags.length ? tags.join(", ") : "*None*"}
+${this.props.transcription ? codeBlock("ansi", this.props.transcription) : ""}
 -# ${id}`;
     const thumbnail = (
       <Thumbnail

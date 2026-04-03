@@ -16,13 +16,14 @@ import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 import { DeleteConfirmation } from "../views/delete_confirmation";
 import { s3 } from "../services/s3_service";
+import { transcriptionService } from "../services/transcription_service";
 
 export default class InfoController {
   private isValidAction = createValidator(
     "play",
     "edit",
     "delete",
-    "redownload"
+    "redownload",
   );
 
   async onButton(interaction: ButtonInteraction) {
@@ -63,7 +64,7 @@ export default class InfoController {
     const playedAt = new Date();
     await VoiceService.shared.play(
       interaction,
-      s3.public.file(`audio/${meme.id}.webm`)
+      s3.public.file(`audio/${meme.id}.webm`),
     );
     await db
       .update(Meme)
@@ -97,7 +98,7 @@ export default class InfoController {
     return await interaction.showModal(
       <Modal title="Edit meme" custom_id={`edit:edit:${id}`}>
         <InfoFields {...{ tags, commands, name }} />
-      </Modal>
+      </Modal>,
     );
   }
   private async redownload(interaction: ButtonInteraction, id: string) {
@@ -110,7 +111,7 @@ export default class InfoController {
     return await interaction.showModal(
       <Modal title="Edit meme" custom_id={`edit:redownload:${id}`}>
         <DownloadFields {...{ sourceUrl, start, end }} />
-      </Modal>
+      </Modal>,
     );
   }
 
@@ -140,9 +141,16 @@ export default class InfoController {
       });
       const id = command?.memeId;
       if (!id) throw new Error("No meme");
-      await interaction.reply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
+      const info = await MemeInfo.getInfo(id);
+      await interaction.reply(<MemeInfo info={info} />);
+      await interaction.editReply(
+        <MemeInfo
+          info={info}
+          transcription={await transcriptionService.transcribeColor(id)}
+        />,
+      );
     } catch (e) {
-      await interaction.reply(<ErrorMessage error={e} />);
+      await interaction.followUp(<ErrorMessage error={e} ephemeral={true} />);
     }
   }
 
