@@ -1,18 +1,22 @@
-<div class="max-w-5xl mx-auto px-4 py-8">
-  <div class="flex items-center gap-3 mb-6">
-    <h1 class="text-3xl font-bold">Memebot</h1>
-    <img src="favicon.png" class="float-left h-7 rounded-full" />
+<div class="sticky top-0 z-10 bg-gray-950 pb-4 pt-8 px-4">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+      <h1 class="text-3xl font-bold">Memebot</h1>
+      <img src="favicon.png" class="float-left h-7 rounded-full" />
+    </div>
+
+    <!-- Search -->
+    <input
+      type="text"
+      placeholder="Search memes, aliases, or tags..."
+      class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      [value]="search()"
+      (input)="onSearch($event)"
+    />
   </div>
+</div>
 
-  <!-- Search -->
-  <input
-    type="text"
-    placeholder="Search memes, aliases, or tags..."
-    class="w-full px-4 py-3 mb-8 rounded-lg bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-    [value]="search()"
-    (input)="onSearch($event)"
-  />
-
+<div class="max-w-5xl mx-auto px-4 pb-8 pt-4">
   @if (memeService.loading()) {
     <p class="text-gray-400">Loading memes...</p>
   }
