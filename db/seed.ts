@@ -1,8 +1,23 @@
 import { $, S3Client } from "bun";
 import { env } from "../app/services/env_service";
+import { parseArgs } from "node:util";
 
-// Don't run the seed file until we fix this
-throw new Error("Not implemented yet!");
+const { values: options } = parseArgs({
+  args: Bun.argv.slice(2),
+  options: {
+    dryrun: {
+      type: "boolean",
+      default: true,
+    },
+    delete: {
+      type: "boolean",
+      default: false,
+    },
+  },
+  strict: true,
+  allowPositionals: false,
+  allowNegative: true,
+});
 
 if (!env.seedBucket) {
   // Abort if seed value is not set.
@@ -12,31 +27,40 @@ if (!env.seedBucket) {
 }
 
 const AWS_ENV = {
-  AWS_ACCESS_KEY_ID: env.s3AccessKeyId,
-  AWS_SECRET_ACCESS_KEY: env.s3SecretAccessKey,
+  AWS_ACCESS_KEY_ID: env.seedAccessKeyId,
+  AWS_SECRET_ACCESS_KEY: env.seedSecretAccessKey,
   AWS_ENDPOINT_URL: env.s3Endpoint,
 };
 
-const s3 = new S3Client({ bucket: env.seedBucket });
+const s3 = new S3Client({
+  bucket: env.seedBucket,
+  accessKeyId: env.seedAccessKeyId,
+  secretAccessKey: env.seedSecretAccessKey,
+});
 
-console.log("Downloading backup");
-let buffer = await s3.file("backup/backup.sql.br").arrayBuffer();
+if (!options.dryrun) {
+  console.log("Downloading backup");
+  let buffer = await s3.file("backup/backup.sql.br").arrayBuffer();
 
-console.log("Decompressing backup");
-buffer = await $`brotli -d - < ${buffer}`.arrayBuffer();
+  console.log("Decompressing backup");
+  buffer = await $`brotli -d - < ${buffer}`.arrayBuffer();
 
-console.log("Delete current database");
-await $`rm memebot.sqlite*`;
+  console.log("Delete current database");
+  await $`rm memebot.sqlite*`;
 
-console.log("Seed new db");
-await $`sqlite3 memebot.sqlite < ${buffer}`;
+  console.log("Seed new db");
+  await $`sqlite3 memebot.sqlite < ${buffer}`;
+}
+
+const dryrunArg = options.dryrun ? "--dryrun" : "";
+const deleteArg = options.delete ? "--delete" : "";
 
 console.log("Sync audio files");
-await $`aws s3 sync s3://${env.seedBucket}/audio s3://${env.s3Bucket}/audio --delete --acl public-read`.env(
-  AWS_ENV
+await $`aws s3 sync s3://${env.seedBucketPublic}/audio s3://${env.s3BucketPublic}/audio ${deleteArg} --acl public-read ${dryrunArg}`.env(
+  AWS_ENV,
 );
 
 console.log("Sync waveform files");
-await $`aws s3 sync s3://${env.seedBucket}/waveform s3://${env.s3Bucket}/waveform --delete --acl public-read`.env(
-  AWS_ENV
+await $`aws s3 sync s3://${env.seedBucketPublic}/waveform s3://${env.s3BucketPublic}/waveform ${deleteArg} --acl public-read ${dryrunArg}`.env(
+  AWS_ENV,
 );
