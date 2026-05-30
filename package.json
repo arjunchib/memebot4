@@ -17,7 +17,8 @@
     "seed": "bun ./db/seed.ts",
     "db:migrate": "bun ./db/migrate.ts",
     "db:generate": "drizzle-kit generate",
-    "site:build": "cd site && npm exec -- ng build"
+    "site:build": "cd site && npm exec -- ng build",
+    "transcribe": "bun ./scripts/whisper.ts"
   },
   "private": true,
   "type": "module",
