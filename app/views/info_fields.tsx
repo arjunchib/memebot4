@@ -14,10 +14,12 @@ export class InfoFields {
   static parse(interaction: ModalSubmitInteraction) {
     const commands = interaction.fields
       .getTextInputValue("commands")
+      .replaceAll(",", " ")
       .split(" ")
       .filter((x) => x.length);
     const tags = interaction.fields
       .getTextInputValue("tags")
+      .replaceAll(",", " ")
       .split(" ")
       .filter((x) => x.length);
     const transcription = interaction.fields.getTextInputValue("transcription");
