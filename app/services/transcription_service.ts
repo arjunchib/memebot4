@@ -47,8 +47,8 @@ export class TranscriptionService {
     AnsiColor.Cyan,
   ];
 
-  async transcibe(id: string) {
-    const url = `${env.assetBaseUrl}/audio/${id}.webm`;
+  async transcibe(id: string, file?: string) {
+    const url = file || `${env.assetBaseUrl}/audio/${id}.webm`;
 
     const result =
       (await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json()) as TranscriptionJsonResult;

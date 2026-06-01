@@ -10,6 +10,7 @@ import { DownloadFields } from "../views/download_fields";
 import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 import { s3 } from "../services/s3_service";
+import { transcriptionService } from "../services/transcription_service";
 
 type ActionType = "edit" | "redownload";
 
@@ -48,7 +49,7 @@ export default class EditController {
       throw new Error(
         `Cannot add duplicate commands: ${duplicateCommands
           .map((c) => c.name)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -82,7 +83,6 @@ export default class EditController {
     const audioService = new AudioService({ id, sourceUrl, start, end });
     const { file, waveformFile, loudness, parsedSourceUrl, stats } =
       await audioService.download();
-    await VoiceService.shared.play(interaction, file);
 
     await db
       .update(Meme)
@@ -106,8 +106,14 @@ export default class EditController {
       s3.public.write(`waveform/${id}.png`, Bun.file(waveformFile), {
         type: "image/png",
       }),
+      transcriptionService.transcibe(id, file),
     ]);
 
-    await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
+    await Promise.all([
+      await VoiceService.shared.play(interaction, file),
+      await interaction.editReply(
+        <MemeInfo info={await MemeInfo.getInfo(id)} />,
+      ),
+    ]);
   }
 }

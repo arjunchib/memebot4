@@ -16,6 +16,7 @@ import { InfoFields } from "../views/info_fields";
 import { ErrorMessage } from "../views/error_message";
 import { kv } from "../services/kv_service";
 import { s3 } from "../services/s3_service";
+import { transcriptionService } from "../services/transcription_service";
 
 interface AddFields {
   sourceUrl?: string;
@@ -34,7 +35,7 @@ export default class AddController {
       <Modal title="Add meme" custom_id="add">
         <DownloadFields />
         <InfoFields />
-      </Modal>
+      </Modal>,
     );
   }
 
@@ -59,7 +60,7 @@ export default class AddController {
           commands,
           name,
         },
-        new Date(Date.now() + DAY)
+        new Date(Date.now() + DAY),
       );
 
       // Parse name
@@ -79,7 +80,7 @@ export default class AddController {
         throw new Error(
           `Cannot add duplicate commands: ${duplicateCommands
             .map((c) => c.name)
-            .join(", ")}`
+            .join(", ")}`,
         );
       }
 
@@ -87,7 +88,6 @@ export default class AddController {
       const audioService = new AudioService({ id, sourceUrl, start, end });
       const { file, waveformFile, loudness, parsedSourceUrl, stats } =
         await audioService.download();
-      await VoiceService.shared.play(interaction, file);
 
       await db.transaction(async (tx) => {
         await tx.insert(Meme).values({
@@ -124,11 +124,15 @@ export default class AddController {
         s3.public.write(`waveform/${id}.png`, Bun.file(waveformFile), {
           type: "image/png",
         }),
+        transcriptionService.transcibe(id, file),
       ]);
 
-      await interaction.editReply(
-        <MemeInfo info={await MemeInfo.getInfo(id)} />
-      );
+      await Promise.all([
+        await VoiceService.shared.play(interaction, file),
+        await interaction.editReply(
+          <MemeInfo info={await MemeInfo.getInfo(id)} />,
+        ),
+      ]);
     } catch (e) {
       interaction.editReply(
         <ErrorMessage error={e} ephemeral>
@@ -137,7 +141,7 @@ export default class AddController {
               Try Again
             </Button>
           </ActionRow>
-        </ErrorMessage>
+        </ErrorMessage>,
       );
     }
   }
@@ -152,7 +156,7 @@ export default class AddController {
         <Modal title="Add meme" custom_id="add">
           <DownloadFields {...{ sourceUrl, start, end }} />
           <InfoFields {...{ commands, tags, name }} />
-        </Modal>
+        </Modal>,
       );
     } catch (e) {
       await interaction.followUp(<ErrorMessage error={e} ephemeral />);
