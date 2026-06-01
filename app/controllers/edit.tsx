@@ -1,7 +1,7 @@
 import { ModalSubmitInteraction } from "discord.js";
 import { AudioService } from "../services/audio_service";
 import { VoiceService } from "../services/voice_service";
-import { Command, Meme, MemeTag, Tag } from "../../db/schema";
+import { Command, Meme, MemeTag, Tag, Transcription } from "../../db/schema";
 import { db } from "../../db/database";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { MemeInfo } from "../views/meme_info";
@@ -38,7 +38,8 @@ export default class EditController {
   }
 
   private async edit(interaction: ModalSubmitInteraction, id: string) {
-    const { commands, tags, name } = InfoFields.parse(interaction);
+    const { commands, tags, name, transcription } =
+      InfoFields.parse(interaction);
 
     const duplicateCommands = await db.query.commands.findMany({
       where: and(inArray(Command.name, commands), ne(Command.memeId, id)),
@@ -72,6 +73,15 @@ export default class EditController {
         .update(Meme)
         .set({ name, updatedAt: sql`(unixepoch())` })
         .where(eq(Meme.id, id));
+      await tx
+        .update(Transcription)
+        .set({
+          text: transcription,
+          tokens: null,
+          isHuman: true,
+          updatedAt: sql`(unixepoch())`,
+        })
+        .where(eq(Transcription.memeId, id));
     });
 
     await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);

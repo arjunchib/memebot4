@@ -59,6 +59,7 @@ export class TranscriptionService {
         memeId: id,
         tokens: result.transcription.flatMap((t) => t.tokens),
         text: result.transcription.map((t) => t.text).join(""),
+        isHuman: false,
         // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
         updatedAt: sql`(unixepoch())`,
       })
@@ -68,11 +69,12 @@ export class TranscriptionService {
           tokens: sql`excluded.tokens`,
           text: sql`excluded.text`,
           updatedAt: sql`excluded.updated_at`,
+          isHuman: false,
         },
       });
   }
 
-  colorize(tokens: TranscriptionToken[]) {
+  colorizeTokens(tokens: TranscriptionToken[]) {
     const text = tokens
       .filter((token) => token.id !== 50257)
       .reduce((acc, token, i, arr) => {
@@ -102,6 +104,15 @@ export class TranscriptionService {
         .join("")
         .trim();
     }
+  }
+
+  colorizeHuman(text: string) {
+    // Use last color for 100% confidence
+    const color = TranscriptionService.COLORS.at(-1);
+    const colorText = `\u001b[${FORMAT};${color}m${text}\u001b[0m`;
+
+    // Color text does not work above 1000 characters, fall back to plain text
+    return colorText.length <= 1000 ? colorText : text;
   }
 
   private color(p?: number) {

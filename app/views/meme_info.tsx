@@ -29,7 +29,7 @@ export class MemeInfo {
       with: {
         memeTags: { columns: { tagName: true } },
         commands: { columns: { name: true } },
-        transcription: { columns: { tokens: true } },
+        transcription: { columns: { tokens: true, text: true, isHuman: true } },
       },
     });
     if (!meme) throw new Error(`Cannot find meme with id: ${id}`);
@@ -45,6 +45,22 @@ export class MemeInfo {
     }
   }
 
+  private transcription() {
+    const { transcription } = this.props.info;
+    if (!transcription) return "";
+
+    const { isHuman, text, tokens } = transcription;
+
+    let colorText;
+    if (isHuman) {
+      colorText = transcriptionService.colorizeHuman(text);
+    } else if (tokens) {
+      colorText = transcriptionService.colorizeTokens(tokens);
+    }
+
+    return colorText ? codeBlock("ansi", colorText) : codeBlock(text);
+  }
+
   render() {
     const {
       name,
@@ -58,7 +74,6 @@ export class MemeInfo {
       memeTags,
       commands,
       playCount,
-      transcription,
     } = this.props.info;
     const tags = memeTags.map((mt) => mt.tagName);
     const trim = ` (${start || ""}..${end || ""})`;
@@ -69,7 +84,7 @@ export class MemeInfo {
 - plays: ${playCount}
 - commands: ${commands.map((c) => c.name).join(", ")}
 - tags: ${tags.length ? tags.join(", ") : "*None*"}
-${transcription ? codeBlock("ansi", transcriptionService.colorize(transcription.tokens)) : ""}
+${this.transcription()}
 -# ${id}`;
     const thumbnail = (
       <Thumbnail

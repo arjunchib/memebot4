@@ -89,15 +89,17 @@ export default class InfoController {
       with: {
         commands: { columns: { name: true } },
         memeTags: { columns: { tagName: true } },
+        transcription: { columns: { text: true } },
       },
     });
     if (!meme) throw new Error("No meme");
     const commands = meme.commands.map((c) => c.name);
     const tags = meme.memeTags.map((t) => t.tagName);
     const { name } = meme;
+    const transcription = meme.transcription?.text;
     return await interaction.showModal(
       <Modal title="Edit meme" custom_id={`edit:edit:${id}`}>
-        <InfoFields {...{ tags, commands, name }} />
+        <InfoFields {...{ tags, commands, name, transcription }} />
       </Modal>,
     );
   }

@@ -1,4 +1,4 @@
-import type { ModalSubmitInteraction } from "discord.js";
+import { TextInputStyle, type ModalSubmitInteraction } from "discord.js";
 import { Label, TextInput } from "mango";
 
 export class InfoFields {
@@ -7,7 +7,8 @@ export class InfoFields {
       name?: string;
       commands?: string[];
       tags?: string[];
-    }
+      transcription?: string;
+    },
   ) {}
 
   static parse(interaction: ModalSubmitInteraction) {
@@ -19,8 +20,9 @@ export class InfoFields {
       .getTextInputValue("tags")
       .split(" ")
       .filter((x) => x.length);
+    const transcription = interaction.fields.getTextInputValue("transcription");
     const [name] = commands;
-    return { commands, tags, name };
+    return { commands, tags, name, transcription };
   }
 
   private commands() {
@@ -43,7 +45,7 @@ export class InfoFields {
           description="First command becomes the name of the meme"
         >
           <TextInput
-            style={1}
+            style={TextInputStyle.Short}
             custom_id="commands"
             placeholder="command1 command2 command3"
             value={this.commands() || ""}
@@ -51,11 +53,20 @@ export class InfoFields {
         </Label>
         <Label label="Tags">
           <TextInput
-            style={1}
+            style={TextInputStyle.Short}
             custom_id="tags"
             required={false}
             placeholder="tag1 tag2 tag3"
             value={this.tags() || ""}
+          />
+        </Label>
+        <Label label="Transcription">
+          <TextInput
+            style={TextInputStyle.Paragraph}
+            custom_id="transcription"
+            required={false}
+            placeholder={`But what I want to know is where's the caveman!`}
+            value={this.props.transcription || ""}
           />
         </Label>
       </>

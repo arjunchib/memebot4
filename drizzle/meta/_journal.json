@@ -64,6 +64,13 @@
       "when": 1780280908066,
       "tag": "0008_neat_husk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1780291889054,
+      "tag": "0009_outstanding_sunspot",
+      "breakpoints": true
     }
   ]
 }

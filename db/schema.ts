@@ -113,10 +113,8 @@ export const Transcription = sqliteTable("transcriptions", {
     .notNull()
     .$onUpdate(() => sql`(unixepoch())`),
   text: text("text").notNull(),
-  // text_colored: text("text").notNull(),
-  tokens: text("tokens", { mode: "json" })
-    .$type<TranscriptionToken[]>()
-    .notNull(),
+  tokens: text("tokens", { mode: "json" }).$type<TranscriptionToken[]>(),
+  isHuman: integer("is_human", { mode: "boolean" }).notNull(),
   memeId: text("meme_id")
     .unique()
     .references(() => Meme.id, {
