@@ -141,14 +141,7 @@ export default class InfoController {
       });
       const id = command?.memeId;
       if (!id) throw new Error("No meme");
-      const info = await MemeInfo.getInfo(id);
-      await interaction.reply(<MemeInfo info={info} />);
-      await interaction.editReply(
-        <MemeInfo
-          info={info}
-          transcription={await transcriptionService.transcribeColor(id)}
-        />,
-      );
+      await interaction.reply(<MemeInfo info={await MemeInfo.getInfo(id)} />);
     } catch (e) {
       await interaction.followUp(<ErrorMessage error={e} ephemeral={true} />);
     }

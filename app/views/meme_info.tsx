@@ -13,12 +13,12 @@ import { Meme } from "../../db/schema";
 import { db } from "../../db/database";
 import { eq } from "drizzle-orm";
 import { env } from "../services/env_service";
+import { transcriptionService } from "../services/transcription_service";
 
 export class MemeInfo {
   constructor(
     private props: {
       info: Awaited<ReturnType<(typeof MemeInfo)["getInfo"]>>;
-      transcription?: string;
       error?: string | Error | unknown;
     },
   ) {}
@@ -29,6 +29,7 @@ export class MemeInfo {
       with: {
         memeTags: { columns: { tagName: true } },
         commands: { columns: { name: true } },
+        transcription: { columns: { tokens: true } },
       },
     });
     if (!meme) throw new Error(`Cannot find meme with id: ${id}`);
@@ -57,6 +58,7 @@ export class MemeInfo {
       memeTags,
       commands,
       playCount,
+      transcription,
     } = this.props.info;
     const tags = memeTags.map((mt) => mt.tagName);
     const trim = ` (${start || ""}..${end || ""})`;
@@ -67,7 +69,7 @@ export class MemeInfo {
 - plays: ${playCount}
 - commands: ${commands.map((c) => c.name).join(", ")}
 - tags: ${tags.length ? tags.join(", ") : "*None*"}
-${this.props.transcription ? codeBlock("ansi", this.props.transcription) : ""}
+${transcription ? codeBlock("ansi", transcriptionService.colorize(transcription.tokens)) : ""}
 -# ${id}`;
     const thumbnail = (
       <Thumbnail

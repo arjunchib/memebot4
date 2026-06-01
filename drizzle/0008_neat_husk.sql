@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `transcriptions_meme_id_unique` ON `transcriptions` (`meme_id`);

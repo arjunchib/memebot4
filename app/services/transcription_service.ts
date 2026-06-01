@@ -1,54 +1,116 @@
 import { $ } from "bun";
 import { env } from "./env_service";
+import { db } from "../../db/database";
+import { Transcription } from "../../db/schema";
+import { sql } from "drizzle-orm";
+
+export interface TranscriptionToken {
+  text: string;
+  timestamps: {
+    from: string;
+    to: string;
+  };
+  offsets: {
+    from: number;
+    to: number;
+  };
+  id: number;
+  p: number;
+  t_dtw: number;
+}
 
 interface TranscriptionJsonResult {
   transcription: {
-    tokens: {
-      text: string;
-      timestamps: {
-        from: string;
-        to: string;
-      };
-      offsets: {
-        from: number;
-        to: number;
-      };
-      id: number;
-      p: number;
-      t_dtw: number;
-    }[];
+    text: string;
+    tokens: TranscriptionToken[];
   }[];
 }
 
 const FORMAT = 0;
-const RED = 31;
-const GREEN = 32;
-const YELLOW = 33;
+
+enum AnsiColor {
+  Gray = 30,
+  Red,
+  Green,
+  Yellow,
+  Blue,
+  Pink,
+  Cyan,
+  White,
+}
 
 export class TranscriptionService {
-  async getTranscriptionJson(id: string) {
+  static COLORS = [
+    AnsiColor.Red,
+    AnsiColor.Yellow,
+    AnsiColor.Green,
+    AnsiColor.Cyan,
+  ];
+
+  async transcibe(id: string) {
     const url = `${env.assetBaseUrl}/audio/${id}.webm`;
-    return (await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json()) as TranscriptionJsonResult;
+
+    const result =
+      (await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json()) as TranscriptionJsonResult;
+
+    await db
+      .insert(Transcription)
+      .values({
+        memeId: id,
+        tokens: result.transcription.flatMap((t) => t.tokens),
+        text: result.transcription.map((t) => t.text).join(""),
+        // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
+        updatedAt: sql`(unixepoch())`,
+      })
+      .onConflictDoUpdate({
+        target: Transcription.memeId,
+        set: {
+          tokens: sql`excluded.tokens`,
+          text: sql`excluded.text`,
+          updatedAt: sql`excluded.updated_at`,
+        },
+      });
   }
 
-  async transcribeColor(id: string) {
-    const json = await this.getTranscriptionJson(id);
-    const transcriptions = json.transcription;
-    const tokens = transcriptions.flatMap((t) => t.tokens);
-
-    return tokens
+  colorize(tokens: TranscriptionToken[]) {
+    const text = tokens
       .filter((token) => token.id !== 50257)
-      .map((token, i) => {
-        let color = GREEN;
-        if (token.p < 0.333333) {
-          color = RED;
-        } else if (token.p < 0.666666) {
-          color = YELLOW;
+      .reduce((acc, token, i, arr) => {
+        const first = i === 0;
+        const last = i === arr.length - 1;
+        const color = this.color(token.p);
+
+        if (first) {
+          acc += `\u001b[${FORMAT};${color}m${token.text.trimStart()}`;
+        } else if (color !== this.color(arr[i - 1]?.p)) {
+          acc += `\u001b[0m\u001b[${FORMAT};${color}m${token.text}`;
+        } else {
+          acc += token.text;
         }
-        const text = i === 0 ? token.text.trimStart() : token.text;
-        return `\u001b[${FORMAT};${color}m${text}\u001b[0m`;
-      })
-      .join("");
+
+        if (last) acc += `\u001b[0m`;
+
+        return acc;
+      }, "");
+
+    // Color text does not work above 1000 characters, fall back to plain text
+    if (text.length <= 1000) {
+      return text;
+    } else {
+      return tokens
+        .map((t) => t.text)
+        .join("")
+        .trim();
+    }
+  }
+
+  private color(p?: number) {
+    if (p == null) throw new Error("Missing probability!");
+
+    // The last color value is only for when p = 1.0
+    const i = Math.floor(p * (TranscriptionService.COLORS.length - 1));
+
+    return TranscriptionService.COLORS[i];
   }
 }
 

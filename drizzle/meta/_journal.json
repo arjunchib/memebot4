@@ -57,6 +57,13 @@
       "when": 1780276090408,
       "tag": "0007_amused_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1780280908066,
+      "tag": "0008_neat_husk",
+      "breakpoints": true
     }
   ]
 }

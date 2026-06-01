@@ -6,21 +6,7 @@ import {
   text,
   primaryKey,
 } from "drizzle-orm/sqlite-core";
-
-type TranscriptionToken = {
-  text: string;
-  timestamps: {
-    from: string;
-    to: string;
-  };
-  offsets: {
-    from: number;
-    to: number;
-  };
-  id: number;
-  p: number;
-  t_dtw: number;
-};
+import type { TranscriptionToken } from "../app/services/transcription_service";
 
 export const Meme = sqliteTable("memes", {
   id: text("id")
@@ -131,8 +117,10 @@ export const Transcription = sqliteTable("transcriptions", {
   tokens: text("tokens", { mode: "json" })
     .$type<TranscriptionToken[]>()
     .notNull(),
-  memeId: text("meme_id").references(() => Meme.id, {
-    onDelete: "cascade",
-    onUpdate: "cascade",
-  }),
+  memeId: text("meme_id")
+    .unique()
+    .references(() => Meme.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
 });
