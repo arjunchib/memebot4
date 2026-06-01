@@ -1,10 +1,11 @@
 import { relations } from "drizzle-orm";
-import { Command, Meme, MemeTag, Play, Tag } from "./schema";
+import { Command, Meme, MemeTag, Play, Tag, Transcription } from "./schema";
 
-export const MemeRelations = relations(Meme, ({ many }) => ({
+export const MemeRelations = relations(Meme, ({ many, one }) => ({
   commands: many(Command),
   memeTags: many(MemeTag),
   plays: many(Play),
+  transcription: one(Transcription),
 }));
 
 export const CommandRelations = relations(Command, ({ one }) => ({
@@ -32,6 +33,13 @@ export const MemeTagRelations = relations(MemeTag, ({ one }) => ({
 export const PlayRelations = relations(Play, ({ one }) => ({
   meme: one(Meme, {
     fields: [Play.memeId],
+    references: [Meme.id],
+  }),
+}));
+
+export const TranscriptionRelations = relations(Transcription, ({ one }) => ({
+  meme: one(Meme, {
+    fields: [Transcription.memeId],
     references: [Meme.id],
   }),
 }));

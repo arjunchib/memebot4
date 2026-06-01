@@ -7,6 +7,21 @@ import {
   primaryKey,
 } from "drizzle-orm/sqlite-core";
 
+type TranscriptionToken = {
+  text: string;
+  timestamps: {
+    from: string;
+    to: string;
+  };
+  offsets: {
+    from: number;
+    to: number;
+  };
+  id: number;
+  p: number;
+  t_dtw: number;
+};
+
 export const Meme = sqliteTable("memes", {
   id: text("id")
     .primaryKey()
@@ -85,7 +100,7 @@ export const MemeTag = sqliteTable(
         columns: [table.memeId, table.tagName],
       }),
     ];
-  }
+  },
 );
 
 export const KV = sqliteTable("kv", {
@@ -100,6 +115,24 @@ export const Play = sqliteTable("plays", {
   isRandom: integer("is_random", { mode: "boolean" }).notNull(),
   memeId: text("meme_id").references(() => Meme.id, {
     onDelete: "set null",
+    onUpdate: "cascade",
+  }),
+});
+
+export const Transcription = sqliteTable("transcriptions", {
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .$onUpdate(() => sql`(unixepoch())`),
+  text: text("text").notNull(),
+  // text_colored: text("text").notNull(),
+  tokens: text("tokens", { mode: "json" })
+    .$type<TranscriptionToken[]>()
+    .notNull(),
+  memeId: text("meme_id").references(() => Meme.id, {
+    onDelete: "cascade",
     onUpdate: "cascade",
   }),
 });

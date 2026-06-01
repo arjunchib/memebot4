@@ -1,12 +1,13 @@
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
-import { MemeTag, KV, Command, Meme, Tag, Play } from "./schema";
+import { MemeTag, KV, Command, Meme, Tag, Play, Transcription } from "./schema";
 import {
   CommandRelations,
   MemeTagRelations,
   MemeRelations,
   TagRelations,
   PlayRelations,
+  TranscriptionRelations,
 } from "./relations";
 
 export const sqlite = new Database("memebot.sqlite", { create: true });
@@ -22,11 +23,13 @@ export const db = drizzle(sqlite, {
     memeTags: MemeTag,
     kv: KV,
     plays: Play,
+    transcriptions: Transcription,
     MemeRelations,
     CommandRelations,
     TagRelations,
     MemeTagRelations,
     PlayRelations,
+    TranscriptionRelations,
   },
 });
 
