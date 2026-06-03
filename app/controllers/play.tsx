@@ -11,6 +11,7 @@ import { VoiceService } from "../services/voice_service";
 import { ErrorMessage } from "../views/error_message";
 import { Message } from "mango";
 import { s3 } from "../services/s3_service";
+import { compareStrings } from "../helpers";
 
 export default class PlayController {
   async onChatInput(interaction: ChatInputCommandInteraction) {
@@ -26,7 +27,7 @@ export default class PlayController {
 
       await VoiceService.shared.play(
         interaction,
-        s3.public.file(`audio/${meme.id}.webm`)
+        s3.public.file(`audio/${meme.id}.webm`),
       );
       const playedAt = new Date();
       await interaction.reply(`Playing *${name}*`);
@@ -47,7 +48,9 @@ export default class PlayController {
     } catch (e) {
       if (e instanceof Error && e.message === "Meme already playing") {
         return interaction.reply(
-          <Message flags={MessageFlags.Ephemeral}>Meme already playing</Message>
+          <Message flags={MessageFlags.Ephemeral}>
+            Meme already playing
+          </Message>,
         );
       }
       if (interaction.replied) {
@@ -78,7 +81,8 @@ export default class PlayController {
           value: name,
         };
       })
-      .filter((choice) => !!choice);
+      .filter((choice) => !!choice)
+      .sort((a, b) => compareStrings(a.value, b.value));
     await interaction.respond(choices);
   }
 }

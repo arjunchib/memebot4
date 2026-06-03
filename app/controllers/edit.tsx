@@ -41,8 +41,6 @@ export default class EditController {
     const { commands, tags, name, transcription } =
       InfoFields.parse(interaction);
 
-    const transcriptionText = transcription.trim();
-
     const duplicateCommands = await db.query.commands.findMany({
       where: and(inArray(Command.name, commands), ne(Command.memeId, id)),
       columns: { name: true },
@@ -76,6 +74,7 @@ export default class EditController {
         .set({ name, updatedAt: sql`(unixepoch())` })
         .where(eq(Meme.id, id));
       if (transcription) {
+        const transcriptionText = transcription.trim();
         const oldTranscription = await db.query.transcriptions.findFirst({
           where: eq(Transcription.memeId, id),
           columns: { text: true },

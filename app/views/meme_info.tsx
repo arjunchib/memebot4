@@ -14,6 +14,7 @@ import { db } from "../../db/database";
 import { eq } from "drizzle-orm";
 import { env } from "../services/env_service";
 import { transcriptionService } from "../services/transcription_service";
+import { compareCommands, compareStrings } from "../helpers";
 
 export class MemeInfo {
   constructor(
@@ -82,8 +83,11 @@ export class MemeInfo {
 - author: ${authorId ? `<@${authorId}>` : "Unknown"}
 - duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
 - plays: ${playCount}
-- commands: ${commands.map((c) => c.name).join(", ")}
-- tags: ${tags.length ? tags.join(", ") : "*None*"}
+- commands: ${commands
+      .map((c) => c.name)
+      .sort(compareCommands(name))
+      .join(" ")}
+- tags: ${tags.length ? tags.sort(compareStrings).join(" ") : "*None*"}
 ${this.transcription()}
 -# ${id}`;
     const thumbnail = (

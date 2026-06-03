@@ -9,3 +9,18 @@ export function createValidator<T extends string[]>(...allowed: T) {
     return allowed.includes(value);
   };
 }
+
+export function compareStrings(a: string, b: string) {
+  return a.localeCompare(b, undefined, {
+    numeric: true,
+    ignorePunctuation: true,
+  });
+}
+
+export function compareCommands(name?: string) {
+  return (a: string, b: string) => {
+    if (a === name) return -1;
+    if (b === name) return 1;
+    return compareStrings(a, b);
+  };
+}

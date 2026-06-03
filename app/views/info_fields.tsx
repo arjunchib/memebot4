@@ -1,5 +1,6 @@
 import { TextInputStyle, type ModalSubmitInteraction } from "discord.js";
 import { Label, TextInput } from "mango";
+import { compareCommands, compareStrings } from "../helpers";
 
 export class InfoFields {
   constructor(
@@ -33,13 +34,13 @@ export class InfoFields {
   private commands() {
     const { commands, name } = this.props;
     if (!commands || !name) return null;
-    return [name, ...commands.filter((c) => c !== name)].join(" ");
+    return commands.sort(compareCommands(name)).join(" ");
   }
 
   private tags() {
     const { tags } = this.props;
     if (!tags) return null;
-    return tags.join(" ");
+    return tags.sort(compareStrings).join(" ");
   }
 
   render() {

@@ -97,8 +97,17 @@ export default class InfoController {
     const tags = meme.memeTags.map((t) => t.tagName);
     const { name } = meme;
     const transcription = meme.transcription?.text;
+
+    const hash = Bun.hash(
+      tags.toString() +
+        commands.toString() +
+        name +
+        transcription +
+        process.pid,
+    );
+
     return await interaction.showModal(
-      <Modal title="Edit meme" custom_id={`edit:edit:${id}`}>
+      <Modal title="Edit meme" custom_id={`edit:edit:${id}:${hash}`}>
         <InfoFields {...{ tags, commands, name, transcription }} />
       </Modal>,
     );
