@@ -22,7 +22,10 @@ export class InfoFields {
       .replaceAll(",", " ")
       .split(" ")
       .filter((x) => x.length);
-    const transcription = interaction.fields.getTextInputValue("transcription");
+    let transcription;
+    try {
+      transcription = interaction.fields.getTextInputValue("transcription");
+    } catch {}
     const [name] = commands;
     return { commands, tags, name, transcription };
   }
@@ -62,15 +65,17 @@ export class InfoFields {
             value={this.tags() || ""}
           />
         </Label>
-        <Label label="Transcription">
-          <TextInput
-            style={TextInputStyle.Paragraph}
-            custom_id="transcription"
-            required={false}
-            placeholder={`But what I want to know is where's the caveman!`}
-            value={this.props.transcription || ""}
-          />
-        </Label>
+        {this.props.transcription && (
+          <Label label="Transcription">
+            <TextInput
+              style={TextInputStyle.Paragraph}
+              custom_id="transcription"
+              required={false}
+              placeholder={`But what I want to know is where's the caveman!`}
+              value={this.props.transcription}
+            />
+          </Label>
+        )}
       </>
     );
   }

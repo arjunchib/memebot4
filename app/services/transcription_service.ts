@@ -19,7 +19,7 @@ export interface TranscriptionToken {
   t_dtw: number;
 }
 
-interface TranscriptionJsonResult {
+export interface TranscriptionJson {
   transcription: {
     text: string;
     tokens: TranscriptionToken[];
@@ -51,14 +51,17 @@ export class TranscriptionService {
     const url = file || `${env.assetBaseUrl}/audio/${id}.webm`;
 
     const result =
-      (await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json()) as TranscriptionJsonResult;
+      (await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json()) as TranscriptionJson;
 
     await db
       .insert(Transcription)
       .values({
         memeId: id,
-        tokens: result.transcription.flatMap((t) => t.tokens),
-        text: result.transcription.map((t) => t.text).join(""),
+        json: result,
+        text: result.transcription
+          .map((t) => t.text)
+          .join("")
+          .trim(),
         isHuman: false,
         // TODO: remove once this is fixed https://github.com/drizzle-team/drizzle-orm/issues/2388
         updatedAt: sql`(unixepoch())`,
@@ -66,7 +69,7 @@ export class TranscriptionService {
       .onConflictDoUpdate({
         target: Transcription.memeId,
         set: {
-          tokens: sql`excluded.tokens`,
+          json: sql`excluded.json`,
           text: sql`excluded.text`,
           updatedAt: sql`excluded.updated_at`,
           isHuman: false,
@@ -74,7 +77,9 @@ export class TranscriptionService {
       });
   }
 
-  colorizeTokens(tokens: TranscriptionToken[]) {
+  colorizeJson(json: TranscriptionJson) {
+    const tokens = json.transcription.flatMap((t) => t.tokens);
+
     const text = tokens
       .filter((token) => token.id !== 50257)
       .reduce((acc, token, i, arr) => {

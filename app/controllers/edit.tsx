@@ -41,6 +41,8 @@ export default class EditController {
     const { commands, tags, name, transcription } =
       InfoFields.parse(interaction);
 
+    const transcriptionText = transcription.trim();
+
     const duplicateCommands = await db.query.commands.findMany({
       where: and(inArray(Command.name, commands), ne(Command.memeId, id)),
       columns: { name: true },
@@ -73,15 +75,23 @@ export default class EditController {
         .update(Meme)
         .set({ name, updatedAt: sql`(unixepoch())` })
         .where(eq(Meme.id, id));
-      await tx
-        .update(Transcription)
-        .set({
-          text: transcription,
-          tokens: null,
-          isHuman: true,
-          updatedAt: sql`(unixepoch())`,
-        })
-        .where(eq(Transcription.memeId, id));
+      if (transcription) {
+        const oldTranscription = await db.query.transcriptions.findFirst({
+          where: eq(Transcription.memeId, id),
+          columns: { text: true },
+        });
+        if (transcriptionText !== oldTranscription?.text) {
+          await tx
+            .update(Transcription)
+            .set({
+              text: transcriptionText,
+              json: null,
+              isHuman: true,
+              updatedAt: sql`(unixepoch())`,
+            })
+            .where(eq(Transcription.memeId, id));
+        }
+      }
     });
 
     await interaction.editReply(<MemeInfo info={await MemeInfo.getInfo(id)} />);

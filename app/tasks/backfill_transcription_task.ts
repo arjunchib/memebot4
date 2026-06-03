@@ -1,7 +1,7 @@
 import { transcriptionService } from "../services/transcription_service";
 import { db } from "../../db/database";
 import { Meme, Transcription } from "../../db/schema";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, not } from "drizzle-orm";
 
 export class BackfillTranscriptionTask {
   async perform() {

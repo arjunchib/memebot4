@@ -6,7 +6,7 @@ import {
   text,
   primaryKey,
 } from "drizzle-orm/sqlite-core";
-import type { TranscriptionToken } from "../app/services/transcription_service";
+import type { TranscriptionJson } from "../app/services/transcription_service";
 
 export const Meme = sqliteTable("memes", {
   id: text("id")
@@ -113,7 +113,7 @@ export const Transcription = sqliteTable("transcriptions", {
     .notNull()
     .$onUpdate(() => sql`(unixepoch())`),
   text: text("text").notNull(),
-  tokens: text("tokens", { mode: "json" }).$type<TranscriptionToken[]>(),
+  json: text("json", { mode: "json" }).$type<TranscriptionJson>(),
   isHuman: integer("is_human", { mode: "boolean" }).notNull(),
   memeId: text("meme_id")
     .unique()

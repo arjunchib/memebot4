@@ -71,6 +71,13 @@
       "when": 1780291889054,
       "tag": "0009_outstanding_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1780450794503,
+      "tag": "0010_romantic_gamma_corps",
+      "breakpoints": true
     }
   ]
 }

@@ -29,7 +29,7 @@ export class MemeInfo {
       with: {
         memeTags: { columns: { tagName: true } },
         commands: { columns: { name: true } },
-        transcription: { columns: { tokens: true, text: true, isHuman: true } },
+        transcription: { columns: { json: true, text: true, isHuman: true } },
       },
     });
     if (!meme) throw new Error(`Cannot find meme with id: ${id}`);
@@ -49,13 +49,13 @@ export class MemeInfo {
     const { transcription } = this.props.info;
     if (!transcription) return "";
 
-    const { isHuman, text, tokens } = transcription;
+    const { isHuman, text, json } = transcription;
 
     let colorText;
     if (isHuman) {
       colorText = transcriptionService.colorizeHuman(text);
-    } else if (tokens) {
-      colorText = transcriptionService.colorizeTokens(tokens);
+    } else if (json) {
+      colorText = transcriptionService.colorizeJson(json);
     }
 
     return colorText ? codeBlock("ansi", colorText) : codeBlock(text);

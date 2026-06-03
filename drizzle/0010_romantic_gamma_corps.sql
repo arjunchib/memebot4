@@ -1,0 +1,1 @@
+ALTER TABLE `transcriptions` RENAME COLUMN "tokens" TO "json";
