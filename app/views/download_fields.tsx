@@ -8,14 +8,16 @@ export class DownloadFields {
       start?: string | null;
       end?: string | null;
       $if?: boolean;
-    }
+    },
   ) {}
 
   static parse(interaction: ModalSubmitInteraction) {
     const sourceUrl = interaction.fields.getTextInputValue("source_url");
-    const trim = interaction.fields.getTextInputValue("trim").trim();
-    const [start, end] =
-      trim === "FULL" ? [undefined, undefined] : trim.split("..");
+    const timestamps = interaction.fields
+      .getTextInputValue("timestamps")
+      .trim();
+    if (!timestamps.includes("..")) throw new Error("Missing timestamps value");
+    const [start, end] = timestamps.split("..");
     return { sourceUrl, start, end };
   }
 
@@ -38,12 +40,12 @@ export class DownloadFields {
           />
         </Label>
         <Label
-          label="Trim"
-          description='Can use the whole audio clip by typing "FULL"'
+          label="Timestamps"
+          description={`Can omit start/end values or omit both for full audio.`}
         >
           <TextInput
             style={1}
-            custom_id="trim"
+            custom_id="timestamps"
             placeholder="5..13"
             value={this.trim() || ""}
           />

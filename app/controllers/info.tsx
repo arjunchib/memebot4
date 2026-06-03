@@ -119,8 +119,13 @@ export default class InfoController {
     });
     if (!meme) throw new Error("No meme");
     const { sourceUrl, start, end } = meme;
+
+    const hash = Bun.hash(
+      (sourceUrl || "") + (start || "") + end + process.pid,
+    );
+
     return await interaction.showModal(
-      <Modal title="Edit meme" custom_id={`edit:redownload:${id}`}>
+      <Modal title="Edit meme" custom_id={`edit:redownload:${id}:${hash}`}>
         <DownloadFields {...{ sourceUrl, start, end }} />
       </Modal>,
     );
