@@ -33,7 +33,7 @@ const prompt = args.at(1) || "";
 console.time("transcribe");
 
 const json =
-  await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ~/.models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json();
+  await $`ffmpeg -loglevel quiet -i ${url} -f wav -acodec pcm_f32le -ar 16000 -ac 1 - | ../whisper.cpp/build/bin/whisper-cli --model ../whisper.cpp/models/ggml-large-v3-turbo.bin -tr -np -nt -ojf -f -`.json();
 
 // console.log(json);
 
