@@ -22,6 +22,7 @@ export class BackfillTranscriptionTask {
       } catch {
         console.error(`Failed transcribing ${name}`);
         failed.push(name);
+        continue;
       }
       const t1 = performance.now();
       console.log(
