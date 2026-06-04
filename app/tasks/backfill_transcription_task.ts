@@ -9,8 +9,7 @@ export class BackfillTranscriptionTask {
       .select({ id: Meme.id, name: Meme.name })
       .from(Meme)
       .leftJoin(Transcription, eq(Meme.id, Transcription.memeId))
-      .where(isNull(Transcription.memeId))
-      .limit(10);
+      .where(isNull(Transcription.memeId));
 
     let i = memes.length;
 
