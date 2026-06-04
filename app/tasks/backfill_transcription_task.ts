@@ -13,18 +13,23 @@ export class BackfillTranscriptionTask {
 
     let i = memes.length;
 
+    const failed = [];
+
     for (const { id, name } of memes) {
       const t0 = performance.now();
       try {
         await transcriptionService.transcibe(id);
-      } catch (e) {
+      } catch {
         console.error(`Failed transcribing ${name}`);
-        throw e;
+        failed.push(name);
       }
       const t1 = performance.now();
       console.log(
         `[${i--}] Transcribed ${name} in ${((t1 - t0) / 1000).toFixed(3)}s`,
       );
     }
+
+    console.log(`Failed to transcibe ${failed.length} memes:`);
+    failed.forEach((name) => console.log(name));
   }
 }
