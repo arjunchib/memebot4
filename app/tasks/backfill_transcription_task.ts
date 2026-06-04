@@ -15,7 +15,12 @@ export class BackfillTranscriptionTask {
 
     for (const { id, name } of memes) {
       const t0 = performance.now();
-      await transcriptionService.transcibe(id);
+      try {
+        await transcriptionService.transcibe(id);
+      } catch (e) {
+        console.error(`Failed transcribing ${name}`);
+        throw e;
+      }
       const t1 = performance.now();
       console.log(
         `[${i--}] Transcribed ${name} in ${((t1 - t0) / 1000).toFixed(3)}s`,
