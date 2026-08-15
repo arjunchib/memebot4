@@ -9,7 +9,14 @@ The memebot4 project is a complex, multimedia-focused bot/application designed t
 - **Database:** Uses `bun:sqlite` for persistence, storing metadata about memes, commands, tags, and plays.
 - **Media Services:** Handles audio processing, including fetching assets from cloud storage and transcribing them.
 
-## 💾 Asset Retrieval Standard (IMPORTANT)
+## Database
+
+Use the `sqlite3` CLI tool for simple, ad-hoc queries:
+
+1.  **Count all memes:** `SELECT COUNT(*) FROM memes;`
+2.  **Find a specific meme by ID:** `SELECT * FROM memes WHERE id = '<memeId>';`
+
+## Asset Retrieval
 
 When referencing a meme's media file that is stored on the staging CDN, **always use the `ASSET_BASE_URL` defined in the `.env` file** to construct the full path. The correct URL structure for an asset with a given `memeId` should be:
 
