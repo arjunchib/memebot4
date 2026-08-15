@@ -13,8 +13,8 @@ The memebot4 project is a complex, multimedia-focused bot/application designed t
 
 Use the `sqlite3` CLI tool for simple, ad-hoc queries:
 
-1.  **Count all memes:** `SELECT COUNT(*) FROM memes;`
-2.  **Find a specific meme by ID:** `SELECT * FROM memes WHERE id = '<memeId>';`
+1.  **Count all memes:** `sqlite3 memebot.sqlite "SELECT COUNT(*) FROM memes;";`
+2.  **Find a specific meme by ID:** `sqlite3 memebot.sqlite "SELECT * FROM memes WHERE id = '<memeId>'";`
 
 ## Asset Retrieval
 
