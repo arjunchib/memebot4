@@ -19,7 +19,9 @@
     "db:generate": "drizzle-kit generate",
     "site:build": "cd site && npm exec -- ng build",
     "transcribe": "bun ./scripts/transcribe.ts",
-    "whisper": "bun ./scripts/whisper.ts"
+    "whisper": "bun ./scripts/whisper.ts",
+    "readonly": "bun ./scripts/readonly.ts",
+    "dumpschema": "sqlite3 memebot.sqlite .schema > schema.sql"
   },
   "private": true,
   "type": "module",
