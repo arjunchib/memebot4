@@ -10,16 +10,9 @@ import { createInterface } from "readline/promises";
 
 const client = new LMStudioClient();
 
-const multiplyTool = tool({
-  name: "multiply",
-  description: "Given two numbers a and b. Returns the product of them.",
-  parameters: { a: z.number(), b: z.number() },
-  implementation: ({ a, b }) => a * b,
-});
-
 const readonlySqliteTool = tool({
   name: "readonlySqlite",
-  description: "Given a sql query run against a read replica of the db.",
+  description: "Run a sql query against the readonly sqlite db.",
   parameters: { query: z.string() },
   implementation: ({ query }) => {
     const results = sqliteReadonly.query(query).all();
@@ -51,9 +44,12 @@ const rl = createInterface({ input: process.stdin, output: process.stdout });
 
 const file = Bun.file("schema.sql");
 const schema = await file.text();
+
+const now = new Date();
+
 chat.append(
   "system",
-  `Duration is stored in seconds. Loudness values are generated from ffmpeg's \`loudnorm\` command. Here is the schema for the db: ${schema}`,
+  `You must output a sql query and nothing else. The current time is ${now.toISOString()}. Duration is stored in seconds. Loudness values are generated from ffmpeg's \`loudnorm\` command. Here is the schema for the db: ${schema}`,
 );
 
 while (true) {

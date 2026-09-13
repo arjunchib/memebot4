@@ -8,7 +8,7 @@ import {
   VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { Readable } from "stream";
-import { client } from "../main";
+import { client } from "../client";
 import { env } from "./env_service";
 import { type Interaction } from "discord.js";
 import type { S3File } from "bun";

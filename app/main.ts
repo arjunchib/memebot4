@@ -1,12 +1,28 @@
-import { bootstrap } from "mango";
 import { setupCron } from "./cron";
 import { router } from "../api/router";
+import { OAuth2Scopes } from "discord.js";
+
+// Start discord client
+const { client } = await import("./client");
+
+import("./events/message_create");
+
+// console.log(
+//   client.generateInvite({
+//     scopes: [OAuth2Scopes.Bot, OAuth2Scopes.ApplicationsCommands],
+//     permissions: [
+//       "Connect",
+//       "Speak",
+//       "SendMessages",
+//       "AttachFiles",
+//       "ManageChannels",
+//       "SendMessages",
+//     ],
+//   }),
+// );
 
 // Larger stack traces
 Error.stackTraceLimit = 20;
-
-// Run discord bot
-export const client = bootstrap();
 
 // Setup cron
 setupCron();
