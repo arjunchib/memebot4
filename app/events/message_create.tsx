@@ -5,6 +5,29 @@ import { sqlToFilename } from "../helpers";
 import { sqliteReadonly } from "../../db/database";
 import { Container, Message, Separator, TextDisplay } from "mango";
 
+function renderAnswerOne(results: any[]) {
+  return Object.entries(results[0] as any)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+}
+
+function renderAnswerMany(results: any[]) {
+  return results
+    .map((result: any, idx) => `${idx}. ${Object.values(result).join(" • ")}`)
+    .join("\n");
+}
+
+function renderAnswer(results: any[]) {
+  const answer =
+    results.length === 1 ? renderAnswerOne(results) : renderAnswerMany(results);
+
+  return (
+    answer
+      // render user tags
+      .replaceAll(/\`?(\d{18})\`?/gm, "<@$1>")
+  );
+}
+
 client.on("messageCreate", async (message) => {
   // Ignore messages from bots to prevent infinite loops
   if (message.author.bot) return;
@@ -26,22 +49,12 @@ client.on("messageCreate", async (message) => {
     const code = codeBlock("sql", query);
 
     if (results.length <= 20) {
-      const answer = results
-        .map((result: any, idx) => {
-          const values = Object.values(result);
-          const displayList = results.length > 1;
-          const row = displayList ? [`${idx}.`, ...values] : values;
-          return row.join(" ");
-        })
-        .join("\n")
-        // render user tags
-        .replaceAll(/\`?(\d{18})\`?/gm, "<@$1>");
       const newMessage = await message.reply(
         <Message allowedMentions={{ parse: [] }}>
           <Container>
             <TextDisplay>{code}</TextDisplay>
             <Separator />
-            <TextDisplay>{answer}</TextDisplay>
+            <TextDisplay>{renderAnswer(results)}</TextDisplay>
           </Container>
         </Message>,
       );
