@@ -37,18 +37,14 @@ export class LlmService {
   }
 
   private async getChat(message: OmitPartialGroupDMChannel<Message<boolean>>) {
-    console.log(message.reference);
-
     // First message
     if (!message.reference?.messageId) {
-      console.log("1 - New chat");
       return await this.newChat();
     }
 
     // Second message w/ loaded chat
     const savedChat = this.chats.get(message.reference.messageId);
     if (savedChat) {
-      console.log("2 - Saved chat");
       return savedChat;
     }
 
@@ -63,7 +59,6 @@ export class LlmService {
     const query = textDisplay?.content.match(/```sql([\s\S]*)```/)?.[1];
     const newChat = await this.newChat();
     newChat.append("system", `The previous query was: ${query}`);
-    console.log("3 - New chat with prev query");
     return newChat;
   }
 
@@ -91,7 +86,6 @@ export class LlmService {
 
     const newChat = chat.asMutableCopy();
     this.chats.set(message.id, newChat);
-    console.log([...this.chats.keys()]);
     newChat.append(response.content);
 
     return response;
@@ -123,7 +117,6 @@ export class LlmService {
     if (!chat) return;
     this.chats.set(toId, chat);
     this.chats.delete(fromId);
-    console.log([...this.chats.keys()]);
   }
 }
 
