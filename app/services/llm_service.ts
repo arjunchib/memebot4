@@ -63,7 +63,7 @@ export class LlmService {
   }
 
   async ask(message: OmitPartialGroupDMChannel<Message<boolean>>) {
-    if (!this.model) await this.setup();
+    if (!this.model?.getModelInfo()) await this.setup();
     if (!this.model) throw new Error("Couldn't initialize model");
     if (!client.user) throw new Error("No discord client");
 
@@ -92,7 +92,7 @@ export class LlmService {
   }
 
   async askFilename(message: OmitPartialGroupDMChannel<Message<boolean>>) {
-    if (!this.model) await this.setup();
+    if (!this.model?.getModelInfo()) await this.setup();
     if (!this.model) throw new Error("Couldn't initialize model");
 
     const chat = await this.getChat(message);
