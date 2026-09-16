@@ -1,4 +1,4 @@
-import { Chat, LLM, LMStudioClient } from "@lmstudio/sdk";
+import { Chat, LLM, LMStudioClient, OngoingPrediction } from "@lmstudio/sdk";
 import {
   ComponentType,
   type Message,
@@ -62,6 +62,23 @@ export class LlmService {
     return newChat;
   }
 
+  private async logPrediction(path: string, prediction: OngoingPrediction) {
+    const file = Bun.file(path);
+
+    if (!(await file.exists())) {
+      await Bun.write(path, "");
+    }
+
+    const writer = file.writer();
+
+    for await (const { content } of prediction) {
+      writer.write(content);
+    }
+    writer.write("\n");
+
+    writer.end();
+  }
+
   async ask(message: OmitPartialGroupDMChannel<Message<boolean>>) {
     if (!this.model?.getModelInfo()) await this.setup();
     if (!this.model) throw new Error("Couldn't initialize model");
@@ -77,10 +94,7 @@ export class LlmService {
 
     const prediction = this.model.respond(chat);
 
-    for await (const { content } of prediction) {
-      process.stdout.write(content);
-    }
-    process.stdout.write("\n");
+    await this.logPrediction(`log/lmm/${message.id}.txt`, prediction);
 
     const response = await prediction;
 
@@ -104,10 +118,7 @@ export class LlmService {
 
     const prediction = this.model.respond(chat);
 
-    for await (const { content } of prediction) {
-      process.stdout.write(content);
-    }
-    process.stdout.write("\n");
+    await this.logPrediction(`log/lmm/${message.id}.txt`, prediction);
 
     return await prediction;
   }
