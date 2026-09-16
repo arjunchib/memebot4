@@ -8,7 +8,15 @@ import { Container, Message, Separator, TextDisplay } from "mango";
 function renderColumn(key: string, value: unknown) {
   if (key.includes("duration") && typeof value === "number") {
     const duration = Temporal.Duration.from(`PT${value.toFixed(9)}S`);
-    return new Intl.DurationFormat("en", { style: "narrow" }).format(duration);
+    return new Intl.DurationFormat("en", {
+      style: "narrow",
+      milliseconds: "numeric",
+    }).format(
+      duration.round({
+        smallestUnit: duration.seconds >= 60 ? "seconds" : "milliseconds",
+        largestUnit: "days",
+      }),
+    );
   }
 
   return value;
