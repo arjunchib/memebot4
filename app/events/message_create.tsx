@@ -7,7 +7,7 @@ import { Container, Message, Separator, TextDisplay } from "mango";
 
 function renderColumn(key: string, value: unknown) {
   if (key.includes("duration") && typeof value === "number") {
-    const duration = Temporal.Duration.from(`PT${value}S`);
+    const duration = Temporal.Duration.from(`PT${value.toFixed(9)}S`);
     return new Intl.DurationFormat("en", { style: "narrow" }).format(duration);
   }
 
