@@ -5,6 +5,15 @@ import { sqlToFilename } from "../helpers";
 import { sqliteReadonly } from "../../db/database";
 import { Container, Message, Separator, TextDisplay } from "mango";
 
+function renderColumn(key: string, value: unknown) {
+  if (key.includes("duration") && typeof value === "number") {
+    const duration = Temporal.Duration.from(`PT${value}S`);
+    return new Intl.DurationFormat("en", { style: "narrow" }).format(duration);
+  }
+
+  return value;
+}
+
 function renderAnswerOne(results: any[]) {
   return Object.entries(results[0] as any)
     .map(([k, v]) => `${k}: ${v}`)
@@ -13,7 +22,10 @@ function renderAnswerOne(results: any[]) {
 
 function renderAnswerMany(results: any[]) {
   return results
-    .map((result: any, idx) => `${idx}. ${Object.values(result).join(" • ")}`)
+    .map((result: any, idx) => {
+      const cols = Object.entries(result).map(([k, v]) => renderColumn(k, v));
+      return `${idx}. ${cols.join(" • ")}`;
+    })
     .join("\n");
 }
 
