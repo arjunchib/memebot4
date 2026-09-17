@@ -17,6 +17,11 @@ function renderColumn(key: string, value: unknown) {
         largestUnit: "days",
       }),
     );
+  } else if (key.includes("url") && typeof value === "string") {
+    const url = URL.parse(value);
+    return `[${url?.hostname}](${url?.toString()})`;
+  } else if (key.includes("author") && typeof value === "string") {
+    return `<@${value}>`;
   }
 
   return value;
@@ -38,14 +43,15 @@ function renderAnswerMany(results: any[]) {
 }
 
 function renderAnswer(results: any[]) {
-  const answer =
-    results.length === 1 ? renderAnswerOne(results) : renderAnswerMany(results);
+  return results.length === 1
+    ? renderAnswerOne(results)
+    : renderAnswerMany(results);
+}
 
-  return (
-    answer
-      // render user tags
-      .replaceAll(/\`?(\d{18})\`?/gm, "<@$1>")
-  );
+function cleanQuery(rawString: string) {
+  const innerQuery = rawString.match(/```sql\s([\s\S]*)\s```/)?.[1];
+  if (innerQuery) return innerQuery;
+  return rawString;
 }
 
 client.on("messageCreate", async (message) => {
@@ -64,7 +70,7 @@ client.on("messageCreate", async (message) => {
 
     if (!response) throw new Error("No LLM response.");
 
-    const query = response.nonReasoningContent;
+    const query = cleanQuery(response.nonReasoningContent);
     const results = sqliteReadonly.query(query).all();
     const code = codeBlock("sql", query);
 
