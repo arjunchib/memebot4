@@ -1,52 +1,9 @@
 import { AttachmentBuilder, codeBlock } from "discord.js";
 import { client } from "../client";
 import { llm } from "../services/llm_service";
-import { sqlToFilename } from "../helpers";
+import { sqlToCsv, sqlToFilename } from "../helpers";
 import { sqliteReadonly } from "../../db/database";
-import { Container, Message, Separator, TextDisplay } from "mango";
-
-function renderColumn(key: string, value: unknown) {
-  if (key.includes("duration") && typeof value === "number") {
-    const duration = Temporal.Duration.from(`PT${value.toFixed(9)}S`);
-    return new Intl.DurationFormat("en", {
-      style: "narrow",
-      milliseconds: "numeric",
-    }).format(
-      duration.round({
-        smallestUnit: duration.seconds >= 60 ? "seconds" : "milliseconds",
-        largestUnit: "days",
-      }),
-    );
-  } else if (key.includes("url") && typeof value === "string") {
-    const url = URL.parse(value);
-    return `[${url?.hostname}](${url?.toString()})`;
-  } else if (key.includes("author") && typeof value === "string") {
-    return `<@${value}>`;
-  }
-
-  return value;
-}
-
-function renderAnswerOne(results: any[]) {
-  return Object.entries(results[0] as any)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join("\n");
-}
-
-function renderAnswerMany(results: any[]) {
-  return results
-    .map((result: any, idx) => {
-      const cols = Object.entries(result).map(([k, v]) => renderColumn(k, v));
-      return `${idx}. ${cols.join(" • ")}`;
-    })
-    .join("\n");
-}
-
-function renderAnswer(results: any[]) {
-  return results.length === 1
-    ? renderAnswerOne(results)
-    : renderAnswerMany(results);
-}
+import { SqlResults } from "../views/sql_results";
 
 function cleanQuery(rawString: string) {
   const innerQuery = rawString.match(/```sql\s([\s\S]*)\s```/)?.[1];
@@ -62,12 +19,9 @@ client.on("messageCreate", async (message) => {
   if (!client.user || !message.mentions.has(client.user)) return;
 
   try {
-    // Make the bot look like it's typing while waiting for the AI response
     await message.channel.sendTyping();
 
-    // Request a response from the llm
     const response = await llm.ask(message);
-
     if (!response) throw new Error("No LLM response.");
 
     const query = cleanQuery(response.nonReasoningContent);
@@ -76,21 +30,11 @@ client.on("messageCreate", async (message) => {
 
     if (results.length <= 20) {
       const newMessage = await message.reply(
-        <Message allowedMentions={{ parse: [] }}>
-          <Container>
-            <TextDisplay>{code}</TextDisplay>
-            <Separator />
-            <TextDisplay>{renderAnswer(results)}</TextDisplay>
-          </Container>
-        </Message>,
+        <SqlResults code={code} results={results} />,
       );
       llm.moveChat(message.id, newMessage.id);
     } else {
-      let csv = Object.keys(results[0] as any).join(",");
-      csv += "\n";
-      csv += results
-        .map((result: any) => Object.values(result).join(","))
-        .join("\n");
+      const csv = sqlToCsv(results);
       const response = await llm.askFilename(message);
       const filename = response.nonReasoningContent;
       const attachment = new AttachmentBuilder(Buffer.from(csv), {

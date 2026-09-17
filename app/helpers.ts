@@ -33,3 +33,12 @@ export function sqlToFilename(sqlQuery: string) {
     .substring(0, 200) // Truncate to safe length
     .replace(/^_+|_+$/g, ""); // Trim leading/trailing underscores
 }
+
+export function sqlToCsv(results: unknown[]) {
+  let csv = Object.keys(results[0] as any).join(",");
+  csv += "\n";
+  csv += results
+    .map((result: any) => Object.values(result).join(","))
+    .join("\n");
+  return csv;
+}
