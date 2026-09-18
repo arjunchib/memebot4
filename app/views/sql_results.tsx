@@ -1,4 +1,12 @@
-import { Container, Message, Separator, TextDisplay } from "mango";
+import { ButtonStyle } from "discord.js";
+import {
+  ActionRow,
+  Button,
+  Container,
+  Message,
+  Separator,
+  TextDisplay,
+} from "mango";
 
 export class SqlResults {
   constructor(
@@ -60,6 +68,11 @@ export class SqlResults {
           <TextDisplay>{this.props.code}</TextDisplay>
           <Separator />
           <TextDisplay>{this.renderAnswer()}</TextDisplay>
+          <ActionRow>
+            <Button style={ButtonStyle.Primary} custom_id="sql">
+              Edit
+            </Button>
+          </ActionRow>
         </Container>
       </Message>
     );
