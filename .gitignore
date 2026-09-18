@@ -40,3 +40,4 @@ audio
 *.plist
 log
 tmp
+restart
