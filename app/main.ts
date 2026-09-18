@@ -1,11 +1,12 @@
 import { setupCron } from "./cron";
 import { router } from "../api/router";
-import { OAuth2Scopes } from "discord.js";
+// import { OAuth2Scopes } from "discord.js";
 
 // Start discord client
 const { client } = await import("./client");
 
-import("./events/message_create");
+import("./events/llm_message_create");
+import("./events/github_message_create");
 
 // console.log(
 //   client.generateInvite({
