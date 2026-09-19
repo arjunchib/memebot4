@@ -16,7 +16,6 @@ import { createValidator } from "../helpers";
 import { ErrorMessage } from "../views/error_message";
 import { DeleteConfirmation } from "../views/delete_confirmation";
 import { s3 } from "../services/s3_service";
-import { transcriptionService } from "../services/transcription_service";
 
 export default class InfoController {
   private isValidAction = createValidator(

@@ -33,6 +33,10 @@ export class SqlResults {
       return `[${url?.hostname}](${url?.toString()})`;
     } else if (key.includes("author") && typeof value === "string") {
       return `<@${value}>`;
+    } else if (key.includes("_at") && typeof value === "number") {
+      return `<t:${value}>`;
+    } else if (value === "" || value == null) {
+      return `none`;
     }
 
     return value;
@@ -69,7 +73,10 @@ export class SqlResults {
           <Separator />
           <TextDisplay>{this.renderAnswer()}</TextDisplay>
           <ActionRow>
-            <Button style={ButtonStyle.Primary} custom_id="sql">
+            <Button style={ButtonStyle.Secondary} custom_id="sql:refresh">
+              Refresh
+            </Button>
+            <Button style={ButtonStyle.Secondary} custom_id="sql:edit">
               Edit
             </Button>
           </ActionRow>
