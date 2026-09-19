@@ -22,7 +22,11 @@
     "whisper": "bun ./scripts/whisper.ts",
     "readonly": "bun ./scripts/readonly.ts",
     "dumpschema": "sqlite3 memebot.sqlite .schema > schema.sql",
-    "llm": "bun ./scripts/llm.ts"
+    "llm": "bun ./scripts/llm.ts",
+    "dedup": "bun ./scripts/dedup.ts",
+    "clean": "bun ./scripts/clean.ts",
+    "open": "bun ./scripts/open.ts",
+    "meme": "bun ./scripts/meme.ts"
   },
   "private": true,
   "type": "module",
