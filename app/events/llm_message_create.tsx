@@ -25,27 +25,10 @@ client.on("messageCreate", async (message) => {
     if (!response) throw new Error("No LLM response.");
 
     const query = cleanQuery(response.nonReasoningContent);
-    const results = sqliteReadonly.query(query).all();
-    const code = codeBlock("sql", query);
+    // const { nonReasoningContent: filename } = await llm.askFilename(message);
+    const newMessage = await message.reply(<SqlResults query={query} />);
 
-    if (results.length <= 20) {
-      const newMessage = await message.reply(
-        <SqlResults code={code} results={results} />,
-      );
-      llm.moveChat(message.id, newMessage.id);
-    } else {
-      const csv = sqlToCsv(results);
-      const response = await llm.askFilename(message);
-      const filename = response.nonReasoningContent;
-      const attachment = new AttachmentBuilder(Buffer.from(csv), {
-        name: `${sqlToFilename(filename)}.csv`,
-      });
-      const newMessage = await message.reply({
-        content: code,
-        files: [attachment],
-      });
-      llm.moveChat(message.id, newMessage.id);
-    }
+    llm.moveChat(message.id, newMessage.id);
   } catch (error) {
     console.error("Error handling AI response:", error);
     await message.reply(

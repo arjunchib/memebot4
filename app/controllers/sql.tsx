@@ -1,19 +1,17 @@
 import {
-  AttachmentBuilder,
   ButtonInteraction,
   ChatInputCommandInteraction,
-  codeBlock,
   ComponentType,
   ModalSubmitInteraction,
 } from "discord.js";
 import { Label, Modal, TextInput } from "mango";
-import { sqliteReadonly } from "../../db/database";
-import { createValidator, sqlToCsv, sqlToFilename } from "../helpers";
+import { createValidator } from "../helpers";
 import { SqlResults } from "../views/sql_results";
 import { ErrorMessage } from "../views/error_message";
+import { summarizeSql } from "../sql_summary";
 
 export default class SqlController {
-  private isValidAction = createValidator("refresh", "edit");
+  private isValidAction = createValidator("refresh", "edit", "csv");
 
   async onChatInput(interaction: ChatInputCommandInteraction) {
     await interaction.showModal(
@@ -31,21 +29,7 @@ export default class SqlController {
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
     const query = interaction.fields.getTextInputValue("query");
-    const code = codeBlock("sql", query);
-    const results = sqliteReadonly.query(query).all();
-
-    if (results.length <= 20) {
-      await interaction.reply(<SqlResults code={code} results={results} />);
-    } else {
-      const csv = sqlToCsv(results);
-      const attachment = new AttachmentBuilder(Buffer.from(csv), {
-        name: `${sqlToFilename(query)}.csv`,
-      });
-      await interaction.reply({
-        content: code,
-        files: [attachment],
-      });
-    }
+    await interaction.reply(<SqlResults query={query} />);
   }
 
   async onButton(interaction: ButtonInteraction) {
@@ -67,19 +51,24 @@ export default class SqlController {
           return await this.refresh(interaction, query);
         case "edit":
           return await this.edit(interaction, query);
+        case "csv":
+          return await this.csv(interaction, query);
       }
     } catch (e) {
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferUpdate();
       }
-      interaction.followUp(<ErrorMessage error={e} ephemeral />);
+      await interaction.followUp(<ErrorMessage error={e} ephemeral />);
     }
   }
 
   private async refresh(interaction: ButtonInteraction, query: string) {
-    const code = codeBlock("sql", query);
-    const results = sqliteReadonly.query(query).all();
-    interaction.update(<SqlResults code={code} results={results} />);
+    await interaction.update(<SqlResults query={query} />);
+  }
+
+  private async csv(interaction: ButtonInteraction, query: string) {
+    const filename = `${summarizeSql(query)}_${interaction.message.id}`;
+    await interaction.update(<SqlResults query={query} csv={filename} />);
   }
 
   private async edit(interaction: ButtonInteraction, query: string) {

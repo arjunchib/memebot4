@@ -5,16 +5,21 @@ import {
   type OmitPartialGroupDMChannel,
 } from "discord.js";
 import { client } from "../client";
+import { sqlToFilename } from "../helpers";
 
 export class LlmService {
   private client = new LMStudioClient();
   // private chat = Chat.empty();
   private model?: LLM;
+  private fastModel?: LLM;
   private chats = new Map<string, Chat>();
 
   async setup() {
-    // this.model = await this.client.llm.model("google/gemma-4-e2b");
     this.model = await this.client.llm.model("google/gemma-4-12b-qat");
+  }
+
+  async setupFast() {
+    this.fastModel = await this.client.llm.model("google/gemma-4-e2b");
   }
 
   private async newChat() {
@@ -105,22 +110,24 @@ export class LlmService {
     return response;
   }
 
-  async askFilename(message: OmitPartialGroupDMChannel<Message<boolean>>) {
-    if (!this.model?.getModelInfo()) await this.setup();
-    if (!this.model) throw new Error("Couldn't initialize model");
+  async generateFilename(query: string) {
+    if (!this.fastModel?.getModelInfo()) await this.setupFast();
+    if (!this.fastModel) throw new Error("Couldn't initialize model");
 
-    const chat = await this.getChat(message);
+    const chat = Chat.empty();
 
     chat.append(
       "system",
-      "Now generate a short filename describing the output. Only output the name and don't included an extension.",
+      "Generate a filename based off of a sql query. Output the filename and nothing else.",
     );
+    chat.append("user", query);
 
-    const prediction = this.model.respond(chat);
+    const prediction = await this.fastModel.respond(chat);
 
-    await this.logPrediction(`log/lmm/${message.id}.txt`, prediction);
-
-    return await prediction;
+    return (
+      prediction.nonReasoningContent.trim().split(".")[0] ||
+      sqlToFilename(query)
+    );
   }
 
   moveChat(fromId: string, toId: string) {

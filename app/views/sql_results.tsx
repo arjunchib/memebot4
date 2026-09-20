@@ -1,4 +1,4 @@
-import { ButtonStyle } from "discord.js";
+import { AttachmentBuilder, ButtonStyle, codeBlock } from "discord.js";
 import {
   ActionRow,
   Button,
@@ -6,15 +6,22 @@ import {
   Message,
   Separator,
   TextDisplay,
+  File,
 } from "mango";
+import { sqlToCsv, sqlToFilename } from "../helpers";
+import { sqliteReadonly } from "../../db/database";
 
 export class SqlResults {
+  private results: unknown[];
+
   constructor(
     private props: {
-      code: string;
-      results: unknown[];
+      query: string;
+      csv?: string;
     },
-  ) {}
+  ) {
+    this.results = sqliteReadonly.query(this.props.query).all();
+  }
 
   private renderColumn(key: string, value: unknown) {
     if (key.includes("duration") && typeof value === "number") {
@@ -43,13 +50,14 @@ export class SqlResults {
   }
 
   private renderAnswerOne() {
-    return Object.entries(this.props.results[0] as any)
+    return Object.entries(this.results[0] as any)
       .map(([k, v]) => `${k}: ${v}`)
       .join("\n");
   }
 
   private renderAnswerMany() {
-    return this.props.results
+    return this.results
+      .slice(0, 20)
       .map((result: any, idx) => {
         const cols = Object.entries(result).map(([k, v]) =>
           this.renderColumn(k, v),
@@ -60,19 +68,33 @@ export class SqlResults {
   }
 
   private renderAnswer() {
-    return this.props.results.length === 1
+    return this.results.length === 1
       ? this.renderAnswerOne()
       : this.renderAnswerMany();
   }
 
+  private getAttachmentBuilder() {
+    if (!this.props.csv) return undefined;
+
+    return new AttachmentBuilder(Buffer.from(sqlToCsv(this.results)), {
+      name: `${sqlToFilename(this.props.csv)}.csv`,
+    });
+  }
+
   render() {
+    const ab = this.getAttachmentBuilder();
+
     return (
-      <Message allowedMentions={{ parse: [] }}>
+      <Message allowedMentions={{ parse: [] }} files={ab ? [ab] : undefined}>
         <Container>
-          <TextDisplay>{this.props.code}</TextDisplay>
+          <TextDisplay>{codeBlock("sql", this.props.query)}</TextDisplay>
           <Separator />
           <TextDisplay>{this.renderAnswer()}</TextDisplay>
+          {ab && <File file={{ url: `attachment://${ab.name}` }} />}
           <ActionRow>
+            <Button style={ButtonStyle.Primary} custom_id="sql:csv">
+              Build CSV
+            </Button>
             <Button style={ButtonStyle.Secondary} custom_id="sql:refresh">
               Refresh
             </Button>
