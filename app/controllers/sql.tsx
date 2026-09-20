@@ -14,17 +14,23 @@ export default class SqlController {
   private isValidAction = createValidator("refresh", "edit", "csv");
 
   async onChatInput(interaction: ChatInputCommandInteraction) {
-    await interaction.showModal(
-      <Modal title="Run query" custom_id="sql">
-        <Label label="Query">
-          <TextInput
-            style={2}
-            custom_id="query"
-            placeholder="SELECT name FROM memes WHERE play_count > 30"
-          />
-        </Label>
-      </Modal>,
-    );
+    const query = interaction.options.getString("query", false);
+
+    if (query) {
+      await interaction.reply(<SqlResults query={query} />);
+    } else {
+      await interaction.showModal(
+        <Modal title="Run query" custom_id="sql">
+          <Label label="Query">
+            <TextInput
+              style={2}
+              custom_id="query"
+              placeholder="SELECT name FROM memes WHERE play_count > 30"
+            />
+          </Label>
+        </Modal>,
+      );
+    }
   }
 
   async onModalSubmit(interaction: ModalSubmitInteraction) {
