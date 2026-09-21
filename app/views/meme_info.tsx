@@ -79,7 +79,7 @@ export class MemeInfo {
     const tags = memeTags.map((mt) => mt.tagName);
     const trim = `(${start || ""}..${end || ""})`;
     const fields = {
-      created: `<t:${createdAt.valueOf()}>`,
+      created: `<t:${Math.floor(createdAt.getTime() / 1000)}>`,
       author: authorId ? `<@${authorId}>` : "Unknown",
       duration: `${formatDuration(duration)} ${start && end ? trim : ""}`,
       plays: playCount,
