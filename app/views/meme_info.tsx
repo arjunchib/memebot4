@@ -14,7 +14,7 @@ import { db } from "../../db/database";
 import { eq } from "drizzle-orm";
 import { env } from "../services/env_service";
 import { transcriptionService } from "../services/transcription_service";
-import { compareCommands, compareStrings } from "../helpers";
+import { compareCommands, compareStrings, formatDuration } from "../helpers";
 
 export class MemeInfo {
   constructor(
@@ -77,17 +77,24 @@ export class MemeInfo {
       playCount,
     } = this.props.info;
     const tags = memeTags.map((mt) => mt.tagName);
-    const trim = ` (${start || ""}..${end || ""})`;
+    const trim = `(${start || ""}..${end || ""})`;
+    const fields = {
+      created: `<t:${createdAt.valueOf()}>`,
+      author: authorId ? `<@${authorId}>` : "Unknown",
+      duration: `${formatDuration(duration)} ${start && end ? trim : ""}`,
+      plays: playCount,
+      commands: commands
+        .map((c) => c.name)
+        .sort(compareCommands(name))
+        .join(" "),
+      tags: tags.length ? tags.sort(compareStrings).join(" ") : null,
+    };
+    const fieldStr = Object.entries(fields)
+      .map(([k, v]) => (v != null ? `- ${k}: ${v}` : null))
+      .filter(Boolean)
+      .join("\n");
     const info = `# ${name}
-- created: ${createdAt.toDateString()}
-- author: ${authorId ? `<@${authorId}>` : "Unknown"}
-- duration: ${duration.toFixed(1)}s${start && end ? trim : ""}
-- plays: ${playCount}
-- commands: ${commands
-      .map((c) => c.name)
-      .sort(compareCommands(name))
-      .join(" ")}
-- tags: ${tags.length ? tags.sort(compareStrings).join(" ") : "*None*"}
+${fieldStr}
 ${this.transcription()}
 -# ${id}`;
     const thumbnail = (

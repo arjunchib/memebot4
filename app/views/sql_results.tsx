@@ -8,7 +8,7 @@ import {
   TextDisplay,
   File,
 } from "mango";
-import { sqlToCsv, sqlToFilename } from "../helpers";
+import { formatDuration, sqlToCsv, sqlToFilename } from "../helpers";
 import { sqliteReadonly } from "../../db/database";
 
 export class SqlResults {
@@ -25,16 +25,7 @@ export class SqlResults {
 
   private renderColumn(key: string, value: unknown) {
     if (key.includes("duration") && typeof value === "number") {
-      const duration = Temporal.Duration.from(`PT${value.toFixed(9)}S`);
-      return new Intl.DurationFormat("en", {
-        style: "narrow",
-        milliseconds: "numeric",
-      }).format(
-        duration.round({
-          smallestUnit: duration.seconds >= 60 ? "seconds" : "milliseconds",
-          largestUnit: "days",
-        }),
-      );
+      return formatDuration(value);
     } else if (key.includes("url") && typeof value === "string") {
       const url = URL.parse(value);
       return `[${url?.hostname}](${url?.toString()})`;

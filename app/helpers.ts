@@ -42,3 +42,18 @@ export function sqlToCsv(results: unknown[]) {
     .join("\n");
   return csv;
 }
+
+export function formatDuration(value: number) {
+  const duration = Temporal.Duration.from(`PT${value.toFixed(9)}S`);
+  const showMs = duration.seconds < 60;
+  return new Intl.DurationFormat("en", {
+    style: "narrow",
+    milliseconds: "numeric",
+    fractionalDigits: showMs ? 1 : 0,
+  }).format(
+    duration.round({
+      smallestUnit: showMs ? "milliseconds" : "seconds",
+      largestUnit: "days",
+    }),
+  );
+}
